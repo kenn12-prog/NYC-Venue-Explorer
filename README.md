@@ -126,20 +126,22 @@ npm start
 1. Open the application in your browser at `http://localhost:3000`
 2. Enter latitude and longitude in the search panel
 3. Select the number of stores to display (5-20)
-4. Click "Search" to find nearby McDonald's locations
-5. View results on the interactive map:
+4. Specify the time range (positive integer)
+5. Click "Search" to find nearby McDonald's locations
+6. View results on the interactive map:
    -  Red marker: Your selected location
-   -  Blue markers: McDonald's store locations
+   -  Blue markers: Nearby McDonald's store locations
 
 ## 🔌 API Endpoints
 
 ### GET /search
-Finds nearest McDonald's locations
+Finds nearest McDonald's locations if they have at least ONE 4 stars rating within a specified days range
 
 #### Parameters
 - `latitude` (number): Search center latitude
 - `longitude` (number): Search center longitude
 - `limit` (number): Maximum number of results (5-20)
+- `days` (must be an integer): Number of days a store have 4 stars rating
 
 #### Response Example
 ```json
