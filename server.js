@@ -15,29 +15,32 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
-// 查询最近的 UNIQUE 坐标店铺
 app.get("/search", async (req, res) => {
-  let { latitude, longitude, limit } = req.query;
+  let { latitude, longitude, limit, days } = req.query;
 
-  // 确保转换为数值
+  // 转换参数
   const parsedLat = parseFloat(latitude);
   const parsedLong = parseFloat(longitude);
   const parsedLimit = parseInt(limit);
+  const parsedDays = parseInt(days);
 
-  if (isNaN(parsedLat) || isNaN(parsedLong) || isNaN(parsedLimit)) {
+  if (isNaN(parsedLat) || isNaN(parsedLong) || isNaN(parsedLimit) || isNaN(parsedDays)) {
     return res.status(400).json({ error: "Invalid query parameters" });
   }
 
-  console.log("Executing query with:", { parsedLat, parsedLong, parsedLimit });
+  console.log("Executing query with:", { parsedLat, parsedLong, parsedLimit, parsedDays });
 
-  const query = `WITH nearest_shops AS (
-    SELECT DISTINCT ON (geom)
+  const query = `
+    WITH filtered_shops AS (
+      SELECT DISTINCT ON (geom)
         geom, 
         store_address,
         ST_Distance(geom, ST_SetSRID(ST_MakePoint($1, $2), 4326)) AS distance
-    FROM mcdonalds_reviews
-    ORDER BY geom, distance
-    LIMIT $3
+      FROM mcdonalds_reviews
+      WHERE parsed_review_time >= NOW() - INTERVAL '${parsedDays} days'
+        AND rating = '4 stars'
+      ORDER BY geom, distance
+      LIMIT $3
     )
     SELECT 
       json_agg(json_build_object(
@@ -45,33 +48,23 @@ app.get("/search", async (req, res) => {
           'longitude', ST_X(geom),
           'address', store_address
       )) AS closest_shops
-    FROM nearest_shops;
+    FROM filtered_shops;
   `;
-
-  // `
-  //   SELECT DISTINCT ON (geom)
-  //   store_name, store_address, latitude, longitude, rating, review_count,
-  //   ST_Distance(ST_SetSRID(geom, 4326)::geography,ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography) AS distance
-  //   FROM mcdonalds_reviews
-  //   WHERE latitude IS NOT NULL AND longitude IS NOT NULL
-  //   ORDER BY geom, distance LIMIT $3;
-  // `;
 
   try {
     const { rows } = await pool.query(query, [
       parsedLat,
       parsedLong,
-      parsedLimit,
+      parsedLimit
     ]);
     console.log("Query results:", rows);
     res.json(rows);
   } catch (err) {
     console.error("Database query error:", err);
-    res
-      .status(500)
-      .json({ error: "Database query error", details: err.message });
+    res.status(500).json({ error: "Database query error", details: err.message });
   }
 });
 
-const PORT = 5000;
+
+const PORT = 5001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

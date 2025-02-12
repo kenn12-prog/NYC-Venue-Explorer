@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";     
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import axios from "axios";
 import L from "leaflet";
 import 'leaflet/dist/leaflet.css';
@@ -12,7 +12,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
 
-// 修改 homeIcon 定义
 const homeIcon = new L.Icon({
   iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -22,7 +21,6 @@ const homeIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-// storeIcon 保持使用蓝色默认图标
 const storeIcon = new L.Icon({
   iconUrl: require('leaflet/dist/images/marker-icon.png'),
   iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
@@ -33,7 +31,6 @@ const storeIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-// Component to fix map rendering issues
 const FixMap = () => {
     const map = useMap();
     useEffect(() => {
@@ -44,7 +41,6 @@ const FixMap = () => {
     return null;
 };
 
-// Component to update the map's center position when a new search is made
 const MapUpdater = ({ center }) => {
   const map = useMap();
   useEffect(() => {
@@ -53,8 +49,7 @@ const MapUpdater = ({ center }) => {
   return null;
 };
 
-// Search panel for input fields
-const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, limit, setLimit, searchStores }) => {
+const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, limit, setLimit, days, setDays, searchStores }) => {
     return (
         <div style={{
             position: "absolute",
@@ -94,7 +89,7 @@ const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, limit, se
                     Find McDonald's
                 </h2>
             </div>
-            
+
             <div className="input-group">
                 <label style={{
                     display: "block",
@@ -121,7 +116,7 @@ const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, limit, se
                     onBlur={(e) => e.target.style.borderColor = "#e0e0e0"}
                 />
             </div>
-
+            
             <div className="input-group">
                 <label style={{
                     display: "block",
@@ -148,7 +143,7 @@ const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, limit, se
                     onBlur={(e) => e.target.style.borderColor = "#e0e0e0"}
                 />
             </div>
-
+            
             <div className="input-group">
                 <label style={{
                     display: "block",
@@ -180,6 +175,32 @@ const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, limit, se
                 </select>
             </div>
 
+            <div className="input-group">
+                <label style={{
+                    display: "block",
+                    marginBottom: "8px",
+                    color: "#4a4a4a",
+                    fontSize: "14px",
+                    fontWeight: "500"
+                }}>4 Star Reviews in the Last X Days:</label>
+                <input 
+                    type="text" 
+                    value={days} 
+                    onChange={(e) => setDays(e.target.value)} 
+                    style={{
+                        padding: "10px 14px",
+                        border: "2px solid #e0e0e0",
+                        borderRadius: "10px",
+                        fontSize: "14px",
+                        width: "calc(100% - 32px)",
+                        backgroundColor: "#f8f9fa",
+                        transition: "all 0.3s ease",
+                        outline: "none"
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = "#FF6B6B"}
+                    onBlur={(e) => e.target.style.borderColor = "#e0e0e0"}
+                />
+            </div>
             <button 
                 onClick={searchStores}
                 style={{
@@ -214,29 +235,27 @@ const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, limit, se
     );
 };
 
-// Main Map Component
 const MapComponent = () => {
     const [latitude, setLatitude] = useState(30);
     const [longitude, setLongitude] = useState(-81.5);
     const [limit, setLimit] = useState(5);
+    const [days, setDays] = useState(2);
     const [stores, setStores] = useState([]);
 
     const searchStores = async () => {
         const searchParams = {
             latitude: parseFloat(latitude),
             longitude: parseFloat(longitude),
-            limit: parseInt(limit)
+            limit: parseInt(limit),
+            days: parseInt(days)
         };
 
         console.log("Sending search request with params:", searchParams);
 
         try {
-            const res = await axios.get("http://localhost:5000/search", {
-                params: searchParams
-            });
-
+            const res = await axios.get("http://localhost:5001/search", { params: searchParams });
             console.log("API response:", res);
-
+            
             if (res.data && res.data.length > 0 && res.data[0].closest_shops) {
                 setStores(res.data[0].closest_shops);
             } else {
@@ -250,35 +269,24 @@ const MapComponent = () => {
 
     return (
         <div style={{ position: "relative", width: "100vw", height: "100vh" }}>
-            <MapContainer 
-                center={[latitude, longitude]} 
-                zoom={13} 
-                style={{ width: "100%", height: "100%", zIndex: 1 }}
-            >
+            <MapContainer center={[latitude, longitude]} zoom={13} style={{ width: "100%", height: "100%", zIndex: 1 }}>
                 <MapUpdater center={[latitude, longitude]} />
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                {/* 将默认位置标记的图标改为 homeIcon */}
                 <Marker position={[latitude, longitude]} icon={homeIcon}>
                     <Popup>Current position</Popup>
                 </Marker>
                 {stores.map((store, index) => (
-                    <Marker 
-                        key={index} 
-                        position={[store.latitude, store.longitude]} 
-                        icon={storeIcon}
-                    >
+                    <Marker key={index} position={[store.latitude, store.longitude]} icon={storeIcon}>
                         <Popup>{store.address}</Popup>
                     </Marker>
                 ))}
                 <FixMap />
             </MapContainer>
             <SearchPanel 
-                latitude={latitude} 
-                setLatitude={setLatitude} 
-                longitude={longitude} 
-                setLongitude={setLongitude} 
-                limit={limit} 
-                setLimit={setLimit} 
+                latitude={latitude} setLatitude={setLatitude} 
+                longitude={longitude} setLongitude={setLongitude} 
+                limit={limit} setLimit={setLimit} 
+                days={days} setDays={setDays} 
                 searchStores={searchStores} 
             />
         </div>
