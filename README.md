@@ -56,7 +56,7 @@ CREATE TABLE mcdonalds_reviews (
 );
 
 -- Insert sample data
-COPY mcdonalds_reviews(store_name, category, store_address, city, state, latitude, longitude, rating)
+COPY mcdonalds_reviews(reviewer_id, store_name, category, store_address, latitude, longitude, rating_count, ...) -- all the attributes in the dataset
 FROM '/path/to/mcdonalds_reviews.csv'
 DELIMITER ',' CSV HEADER;
 
