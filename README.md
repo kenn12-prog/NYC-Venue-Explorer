@@ -2,6 +2,8 @@
 
 An interactive web application that helps users find nearby McDonald's locations using React and Leaflet.js for the frontend, with Node.js and PostGIS-enabled PostgreSQL for spatial queries.
 
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/c87cd5aa-9d35-48bb-8e1b-37e43dedf55c" />
+
 ## ✨ Features
 
 - 🗺️ Interactive map visualization using Leaflet.js
@@ -48,7 +50,7 @@ CREATE EXTENSION postgis;
 CREATE TABLE mcdonalds_reviews (
     id SERIAL PRIMARY KEY,
     store_address TEXT,
-    ...
+    -- fill data with the corresponding data type
     geom GEOMETRY(Point, 4326)
 );
 
@@ -56,6 +58,7 @@ CREATE TABLE mcdonalds_reviews (
 COPY mcdonalds_reviews(store_name, category, store_address, city, state, latitude, longitude, rating)
 FROM '/path/to/mcdonalds_reviews.csv'
 DELIMITER ',' CSV HEADER;
+
 -- Convert Coordinates to Geometry
 UPDATE mcdonalds_reviews
 SET geom = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326);
