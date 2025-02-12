@@ -148,25 +148,10 @@ const MapComponent = () => {
 
             console.log("API response:", res);
 
-            if (res.data && Array.isArray(res.data)) {
-                if (res.data.length === 0) {
-                    alert("No McDonald's locations found nearby. Try another location.");
-                } else {
-                    console.log("Filtered store data:", res.data);
-
-                    // Ensure all stores have valid latitude and longitude
-                    const validStores = res.data.filter(store => 
-                        store.latitude !== null && store.longitude !== null &&
-                        !isNaN(parseFloat(store.latitude)) &&
-                        !isNaN(parseFloat(store.longitude))
-                    );
-
-                    console.log("Valid stores after filtering:", validStores);
-                    setStores(validStores);
-                }
+            if (res.data && res.data.length > 0 && res.data[0].closest_shops) {
+                setStores(res.data[0].closest_shops);
             } else {
-                console.error("Unexpected API response format:", res.data);
-                alert("Error in search results format. Check console for details.");
+                alert("No McDonald's locations found nearby. Try another location.");
             }
         } catch (err) {
             console.error("Search error:", err.response || err);
@@ -179,58 +164,22 @@ const MapComponent = () => {
             <MapContainer 
                 center={[latitude, longitude]} 
                 zoom={13} 
-                style={{ 
-                    width: "100%", 
-                    height: "100%",
-                    zIndex: 1
-                }}
+                style={{ width: "100%", height: "100%", zIndex: 1 }}
             >
                 <MapUpdater center={[latitude, longitude]} />
-                <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                />
-
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                 {/* Search center marker */}
                 <Marker position={[latitude, longitude]}>
                     <Popup>Current position</Popup>
                 </Marker>
-
-                {/* Render store markers if they have valid coordinates */}
-                {stores.map((store, index) => {
-                    const lat = parseFloat(store.latitude);
-                    const lng = parseFloat(store.longitude);
-
-                    if (isNaN(lat) || isNaN(lng)) {
-                        console.warn(`Skipping invalid store coordinates: ${store.store_name}`, store);
-                        return null;
-                    }
-
-                    return (
-                        <Marker key={index} position={[lat, lng]}>
-                            <Popup>
-                                <div style={{ padding: "10px", minWidth: "200px" }}>
-                                    <h3 style={{ margin: "0 0 10px 0", color: "#333" }}>{store.store_name}</h3>
-                                    <p>Address: {store.store_address}</p>
-                                    <p>Rating: {store.rating}⭐</p>
-                                    <p>Distance: {Math.round(store.distance)} meters</p>
-                                </div>
-                            </Popup>
-                        </Marker>
-                    );
-                })}
+                {stores.map((store, index) => (
+                    <Marker key={index} position={[store.latitude, store.longitude]}>
+                        <Popup>{store.address}</Popup>
+                    </Marker>
+                ))}
                 <FixMap />
             </MapContainer>
-            
-            <SearchPanel 
-                latitude={latitude}
-                setLatitude={setLatitude}
-                longitude={longitude}
-                setLongitude={setLongitude}
-                limit={limit}
-                setLimit={setLimit}
-                searchStores={searchStores}
-            />
+            <SearchPanel latitude={latitude} setLatitude={setLatitude} longitude={longitude} setLongitude={setLongitude} limit={limit} setLimit={setLimit} searchStores={searchStores} />
         </div>
     );
 };
