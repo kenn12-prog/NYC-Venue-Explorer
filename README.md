@@ -1,8 +1,7 @@
 # McDonald's Store Locator 🍔
 
 An interactive web application that helps users find nearby McDonald's locations using React and Leaflet.js for the frontend, with Node.js and PostGIS-enabled PostgreSQL for spatial queries.
-
-<img width="800" alt="image" src="https://github.com/user-attachments/assets/c87cd5aa-9d35-48bb-8e1b-37e43dedf55c" />
+<img width="800" alt="UI" src="https://github.com/user-attachments/assets/998ba2c4-f69d-4f69-9de9-13847bca1d63" />
 
 ## ✨ Features
 
@@ -65,6 +64,26 @@ UPDATE mcdonalds_reviews
 SET geom = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326);
 ```
 
+Since the temporal data here is stored in text format, we need to create an extra attribute to save the TIMESTEP values:
+```sql
+-- adding new attribute to existing table
+ALTER TABLE mcdonalds_reviews ADD COLUMN parsed_review_time TIMESTAMP;
+
+-- convert text to timestep and save it to the new attribute column (for hour, day, week, month, and year)
+UPDATE mcdonalds_reviews SET parsed_review_time = NOW() - INTERVAL '1 day' * COALESCE(NULLIF(regexp_replace(review_time, '[^0-9]', '', 'g'), ''), '0')::INTEGER WHERE review_time LIKE '%day%';
+
+UPDATE mcdonalds_reviews SET parsed_review_time = NOW() - INTERVAL '1 month' * COALESCE(NULLIF(regexp_replace(review_time, '[^0-9]', '', 'g'), ''), '0')::INTEGER WHERE review_time LIKE '%month%';
+
+UPDATE mcdonalds_reviews SET parsed_review_time = NOW() - INTERVAL '1 year' * COALESCE(NULLIF(regexp_replace(review_time, '[^0-9]', '', 'g'), ''), '0')::INTEGER WHERE review_time LIKE '%year%';
+
+UPDATE mcdonalds_reviews SET parsed_review_time = NOW() - INTERVAL '1 week' * COALESCE(NULLIF(regexp_replace(review_time, '[^0-9]', '', 'g'), ''), '0')::INTEGER WHERE parsed_review_time IS NULL AND review_time LIKE '%week%';
+
+UPDATE mcdonalds_reviews SET parsed_review_time = NOW() - INTERVAL '1 hour' * COALESCE(NULLIF(regexp_replace(review_time, '[^0-9]', '', 'g'), ''), '0')::INTEGER WHERE parsed_review_time IS NULL AND review_time LIKE '%hour%';
+
+-- check if there is any NULL values, 0 means we successfully process all timestep values
+SELECT COUNT(*) FROM mcdonalds_reviews WHERE parsed_review_time IS NULL;
+```
+
 ### 2. Backend Setup
 
 #### Clone and Install Dependencies
@@ -89,7 +108,7 @@ DB_PORT=5432
 #### Start the Server
 ```bash
 node server.js
-# Server will run on http://localhost:5000
+# Server will run on http://localhost:5001
 ```
 
 ### 3. Frontend Setup
@@ -156,7 +175,7 @@ Finds nearest McDonald's locations
 - PostgreSQL service must be running
 - PostGIS extension must be enabled
 - Frontend runs on port 3000
-- Backend API runs on port 5000
+- Backend API runs on port 5001
 - Ensure all environment variables are properly set
 
 
