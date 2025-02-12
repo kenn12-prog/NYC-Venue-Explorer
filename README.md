@@ -16,7 +16,7 @@ An interactive web application that helps users find nearby McDonald's locations
 ## 🛠️ Tech Stack
 
 ### Frontend
-- React 18
+- React 
 - Leaflet.js (react-leaflet)
 - Axios for API calls
 - Modern CSS3 with Flexbox
