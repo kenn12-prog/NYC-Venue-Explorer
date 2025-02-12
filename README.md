@@ -65,12 +65,12 @@ UPDATE mcdonalds_reviews
 SET geom = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326);
 ```
 
-Since the temporal data here is stored in text format, we need to create an extra attribute to save the TIMESTEP values:
+Since the temporal data here is stored in text format, we need to create an extra attribute to save the TIMESTAMP values:
 ```sql
 -- adding new attribute to existing table
 ALTER TABLE mcdonalds_reviews ADD COLUMN parsed_review_time TIMESTAMP;
 
--- convert text to timestep and save it to the new attribute column (for hour, day, week, month, and year)
+-- convert text to timestamp and save it to the new attribute column (for hour, day, week, month, and year)
 UPDATE mcdonalds_reviews SET parsed_review_time = NOW() - INTERVAL '1 day' * COALESCE(NULLIF(regexp_replace(review_time, '[^0-9]', '', 'g'), ''), '0')::INTEGER WHERE review_time LIKE '%day%';
 
 UPDATE mcdonalds_reviews SET parsed_review_time = NOW() - INTERVAL '1 month' * COALESCE(NULLIF(regexp_replace(review_time, '[^0-9]', '', 'g'), ''), '0')::INTEGER WHERE review_time LIKE '%month%';
@@ -81,7 +81,7 @@ UPDATE mcdonalds_reviews SET parsed_review_time = NOW() - INTERVAL '1 week' * CO
 
 UPDATE mcdonalds_reviews SET parsed_review_time = NOW() - INTERVAL '1 hour' * COALESCE(NULLIF(regexp_replace(review_time, '[^0-9]', '', 'g'), ''), '0')::INTEGER WHERE parsed_review_time IS NULL AND review_time LIKE '%hour%';
 
--- check if there is any NULL values, 0 means we successfully process all timestep values
+-- check if there is any NULL values, 0 means we successfully process all timestamp values
 SELECT COUNT(*) FROM mcdonalds_reviews WHERE parsed_review_time IS NULL;
 ```
 
