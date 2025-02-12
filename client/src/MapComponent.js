@@ -61,86 +61,154 @@ const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, limit, se
             left: "20px",
             top: "20px",
             zIndex: 1000,
-            width: "400px",
-            padding: "30px",
-            backgroundColor: "#ffffff",
-            boxShadow: "0 0 20px rgba(0,0,0,0.15)",
-            borderRadius: "10px",
+            width: "320px",
+            padding: "25px",
+            backgroundColor: "rgba(255, 255, 255, 0.95)",
+            backdropFilter: "blur(10px)",
+            boxShadow: "0 8px 32px rgba(31, 38, 135, 0.15)",
+            borderRadius: "20px",
             display: "flex",
             flexDirection: "column",
-            gap: "20px"
+            gap: "15px",
+            border: "1px solid rgba(255, 255, 255, 0.18)"
         }}>
-            <h2 style={{ color: "#333", marginBottom: "20px" }}>Search Nearby McDonald's</h2>
+            <div style={{
+                backgroundColor: "#FF6B6B",
+                margin: "-25px -25px 20px -25px",
+                padding: "20px",
+                borderRadius: "20px 20px 0 0",
+                textAlign: "center",
+                boxShadow: "0 4px 15px rgba(255, 107, 107, 0.2)"
+            }}>
+                <h2 style={{ 
+                    color: "white", 
+                    margin: 0,
+                    fontSize: "22px",
+                    fontWeight: "600",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px"
+                }}>
+                    <span style={{ fontSize: "24px" }}>🍔</span>
+                    Find McDonald's
+                </h2>
+            </div>
             
             <div className="input-group">
-                <label>Latitude:</label>
+                <label style={{
+                    display: "block",
+                    marginBottom: "8px",
+                    color: "#4a4a4a",
+                    fontSize: "14px",
+                    fontWeight: "500"
+                }}>Latitude:</label>
                 <input 
-                    type="number" 
+                    type="text" 
                     value={latitude} 
                     onChange={(e) => setLatitude(e.target.value)}
                     style={{
-                        padding: "12px",
-                        border: "1px solid #ddd",
-                        borderRadius: "6px",
-                        fontSize: "16px",
-                        width: "100%"
+                        padding: "10px 14px",
+                        border: "2px solid #e0e0e0",
+                        borderRadius: "10px",
+                        fontSize: "14px",
+                        width: "calc(100% - 32px)",
+                        backgroundColor: "#f8f9fa",
+                        transition: "all 0.3s ease",
+                        outline: "none"
                     }}
+                    onFocus={(e) => e.target.style.borderColor = "#FF6B6B"}
+                    onBlur={(e) => e.target.style.borderColor = "#e0e0e0"}
                 />
             </div>
 
             <div className="input-group">
-                <label>Longitude:</label>
+                <label style={{
+                    display: "block",
+                    marginBottom: "8px",
+                    color: "#4a4a4a",
+                    fontSize: "14px",
+                    fontWeight: "500"
+                }}>Longitude:</label>
                 <input 
-                    type="number" 
+                    type="text" 
                     value={longitude} 
                     onChange={(e) => setLongitude(e.target.value)}
                     style={{
-                        padding: "12px",
-                        border: "1px solid #ddd",
-                        borderRadius: "6px",
-                        fontSize: "16px",
-                        width: "100%"
+                        padding: "10px 14px",
+                        border: "2px solid #e0e0e0",
+                        borderRadius: "10px",
+                        fontSize: "14px",
+                        width: "calc(100% - 32px)",
+                        backgroundColor: "#f8f9fa",
+                        transition: "all 0.3s ease",
+                        outline: "none"
                     }}
+                    onFocus={(e) => e.target.style.borderColor = "#FF6B6B"}
+                    onBlur={(e) => e.target.style.borderColor = "#e0e0e0"}
                 />
             </div>
 
             <div className="input-group">
-                <label>Display the number of restaurants:</label>
+                <label style={{
+                    display: "block",
+                    marginBottom: "8px",
+                    color: "#4a4a4a",
+                    fontSize: "14px",
+                    fontWeight: "500"
+                }}>Number of restaurants:</label>
                 <select 
                     value={limit} 
                     onChange={(e) => setLimit(parseInt(e.target.value) || 5)}
                     style={{
-                        padding: "12px",
-                        border: "1px solid #ddd",
-                        borderRadius: "6px",
-                        fontSize: "16px",
-                        width: "100%"
+                        padding: "10px 14px",
+                        border: "2px solid #e0e0e0",
+                        borderRadius: "10px",
+                        fontSize: "14px",
+                        width: "100%",
+                        backgroundColor: "#f8f9fa",
+                        transition: "all 0.3s ease",
+                        outline: "none",
+                        cursor: "pointer",
+                        appearance: "none"
                     }}
                 >
-                    <option value="5">5</option>
-                    <option value="10">10</option>
-                    <option value="15">15</option>
-                    <option value="20">20</option>
+                    <option value="5">5 restaurants</option>
+                    <option value="10">10 restaurants</option>
+                    <option value="15">15 restaurants</option>
+                    <option value="20">20 restaurants</option>
                 </select>
             </div>
 
             <button 
                 onClick={searchStores}
                 style={{
-                    padding: "12px 24px",
+                    padding: "12px 20px",
                     backgroundColor: "#FF6B6B",
                     color: "white",
                     border: "none",
-                    borderRadius: "5px",
+                    borderRadius: "10px",
                     cursor: "pointer",
-                    fontSize: "16px",
-                    marginTop: "20px",
-                    transition: "background-color 0.3s"
+                    fontSize: "15px",
+                    fontWeight: "600",
+                    marginTop: "5px",
+                    transition: "all 0.3s ease",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    boxShadow: "0 4px 15px rgba(255, 107, 107, 0.2)"
                 }}
-                onMouseOver={(e) => e.target.style.backgroundColor = "#FF5252"}
-                onMouseOut={(e) => e.target.style.backgroundColor = "#FF6B6B"}
+                onMouseOver={(e) => {
+                    e.target.style.backgroundColor = "#FF5252";
+                    e.target.style.transform = "translateY(-2px)";
+                }}
+                onMouseOut={(e) => {
+                    e.target.style.backgroundColor = "#FF6B6B";
+                    e.target.style.transform = "translateY(0)";
+                }}
             >
-                Search for nearby restaurants
+                🔍 Search
             </button>
         </div>
     );
