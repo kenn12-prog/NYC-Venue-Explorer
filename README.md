@@ -10,7 +10,7 @@ An interactive web application that helps users find nearby McDonald's locations
 - 🎯 Display nearest McDonald's locations with custom markers
 - 🎨 Modern, responsive UI design
 - 📏 Distance-based store searching
-- ⌚️ time-range selection
+- ⌚️ Time-range selection
 - 🔄 Real-time map updates
 
 ## 🛠️ Tech Stack
