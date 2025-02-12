@@ -171,5 +171,5 @@ npm start
 - Run `npm install` to ensure all dependencies are installed.
 
 ## License
-This project is open-source under the MIT License.
+This project is open-source under the Apache-2.0 license.
 
