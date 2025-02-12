@@ -38,6 +38,7 @@ An interactive web application that helps users find nearby McDonald's locations
 
 #### Create Database and Enable PostGIS
 Download the McDonald's store data from Kaggle: 🔗 [https://www.kaggle.com/datasets/nelgiriyewithana/mcdonalds-store-reviews](https://www.kaggle.com/datasets/nelgiriyewithana/mcdonalds-store-reviews)   
+(Make sure the rating_count values does not contain , and the csv file is encoded as UTF-8)
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/5825e3bf-23e5-420c-8277-7db479712569" />
 
@@ -55,7 +56,7 @@ CREATE TABLE mcdonalds_reviews (
 );
 
 -- Insert sample data
-COPY mcdonalds_reviews(store_name, category, store_address, city, state, latitude, longitude, rating)
+COPY mcdonalds_reviews(reviewer_id, store_name, category, store_address, latitude, longitude, rating_count, ...) -- all the attributes in the dataset
 FROM '/path/to/mcdonalds_reviews.csv'
 DELIMITER ',' CSV HEADER;
 
@@ -167,7 +168,7 @@ Finds nearest McDonald's locations
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache-2.0 license - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
