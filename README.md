@@ -1,114 +1,173 @@
-## Map Visualization Project
+# McDonald's Store Locator 🍔
 
-This project is a full-stack web application for visualizing nearby McDonald's locations using **Leaflet.js** for mapping and **PostgreSQL/PostGIS** for geospatial queries.
+An interactive web application that helps users find nearby McDonald's locations using React and Leaflet.js for the frontend, with Node.js and PostGIS-enabled PostgreSQL for spatial queries.
 
-## Features
-- Search for the **nearest McDonald's stores** based on latitude and longitude.
-- Display stores on an **interactive map** using Leaflet.js.
-- Perform **spatial queries** with PostGIS to find the closest stores.
-- Store **geospatial data** in PostgreSQL with PostGIS extensions.
+## ✨ Features
 
-## Tech Stack
-- **Frontend:** React, Leaflet.js
-- **Backend:** Node.js, Express.js, PostgreSQL, PostGIS
-- **Database:** PostgreSQL with PostGIS extension
+- 🗺️ Interactive map visualization using Leaflet.js
+- 📍 Custom location search with latitude/longitude input
+- 🎯 Display nearest McDonald's locations with custom markers
+- 🎨 Modern, responsive UI design
+- 📏 Distance-based store searching
+- 🔄 Real-time map updates
 
-## Setup Instructions
+## 🛠️ Tech Stack
 
-### 1. Clone the Repository
-```sh
-git clone <repository-url>
-cd map_viz
+### Frontend
+- React 18
+- Leaflet.js (react-leaflet)
+- Axios for API calls
+- Modern CSS3 with Flexbox
+
+### Backend
+- Node.js
+- Express.js
+- PostgreSQL with PostGIS extension
+- CORS for cross-origin requests
+
+## 🚀 Installation Guide
+
+### 1. Database Setup
+
+#### Install PostgreSQL and PostGIS
+```bash
+# check course resources for installation instructions
 ```
 
-### 2. Install PostgreSQL and PostGIS
-Follow the course material to install PostgreSQL and PostGIS.
+#### Create Database and Enable PostGIS
+Download the McDonald's store data from Kaggle: 🔗 [https://www.kaggle.com/datasets/nelgiriyewithana/mcdonalds-store-reviews](https://www.kaggle.com/datasets/nelgiriyewithana/mcdonalds-store-reviews)   
 
-#### 2.1 Create Database and Enable PostGIS
-```sql
-CREATE DATABASE mcdonalds_db;
-\c mcdonalds_db;
-CREATE EXTENSION postgis;
-```
-
-#### 2.2 Create Table for McDonald's Stores
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/5825e3bf-23e5-420c-8277-7db479712569" />
 
-#### 2.3 Import CSV Data
-For a **CSV file** containing McDonald's locations, run:
 ```sql
+CREATE DATABASE mcdonalds_db;
+\c mcdonalds_db
+CREATE EXTENSION postgis;
+
+-- Create table for stores
+CREATE TABLE mcdonalds_reviews (
+    id SERIAL PRIMARY KEY,
+    store_address TEXT,
+    ...
+    geom GEOMETRY(Point, 4326)
+);
+
+-- Insert sample data
 COPY mcdonalds_reviews(store_name, category, store_address, city, state, latitude, longitude, rating)
 FROM '/path/to/mcdonalds_reviews.csv'
 DELIMITER ',' CSV HEADER;
-```
-
-#### 2.4 Convert Coordinates to Geometry
-```sql
+-- Convert Coordinates to Geometry
 UPDATE mcdonalds_reviews
 SET geom = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326);
 ```
 
----
+### 2. Backend Setup
 
-### 3. Install Node.js and npm
-
-#### 3.1 Install Node.js
+#### Clone and Install Dependencies
 Download and install **Node.js** from:  
 🔗 [https://nodejs.org/](https://nodejs.org/)  
-
-**Verify installation:**  
-```sh
-node -v
-npm -v
-```
-If both commands return version numbers, Node.js and npm are installed.
-
-#### 3.2 Install Dependencies
-```sh
+```bash
+git clone <repository-url>
+cd <project-directory>
 npm install
 ```
 
-#### 3.3 Modify `.env` File for Database Connection
-Edit `.env` with your database credentials:
-```
+#### Configure Environment
+Create `.env` file in the root directory:
+```env
 DB_HOST=localhost
 DB_USER=postgres
-DB_PASSWORD=yourpassword
-DB_NAME=mcdonalds_db
+DB_PASSWORD=ur_db_password
+DB_NAME=ur_db_name
 DB_PORT=5432
 ```
 
-#### 3.4 Start the Server
-```sh
+#### Start the Server
+```bash
 node server.js
-```
-If successful, it will log:
-```sh
-Server running on port 5000
+# Server will run on http://localhost:5000
 ```
 
----
+### 3. Frontend Setup
 
-### 4. Set Up Frontend (React + Leaflet.js)
-```sh
+```bash
 cd client
+npm install
 npm start
+# Application will run on http://localhost:3000
 ```
 
-Modify `client/src/MapComponent.js` for frontend customization.
+## 💻 Usage
 
----
+1. Open the application in your browser at `http://localhost:3000`
+2. Enter latitude and longitude in the search panel
+3. Select the number of stores to display (5-20)
+4. Click "Search" to find nearby McDonald's locations
+5. View results on the interactive map:
+   - 🔴 Red marker: Your selected location
+   - 📍 Blue markers: McDonald's store locations
 
-### Final Steps
-✅ **Backend:** PostgreSQL + PostGIS, running on `localhost:5000`  
-✅ **Frontend:** React + Leaflet.js, running on `localhost:3000`  
-✅ **User enters location → Finds McDonald's stores → Map updates dynamically**  
+## 🔌 API Endpoints
 
-## Troubleshooting
-- Ensure PostgreSQL and PostGIS are installed and running.
-- Verify the `.env` file contains correct database credentials.
-- Run `npm install` to ensure all dependencies are installed.
+### GET /search
+Finds nearest McDonald's locations
 
-## License
-This project is open-source under the **Apache-2.0** license.
+#### Parameters
+- `latitude` (number): Search center latitude
+- `longitude` (number): Search center longitude
+- `limit` (number): Maximum number of results (5-20)
 
+#### Response Example
+```json
+[
+  {
+    "closest_shops": [
+      {
+        "latitude": 35.2304,
+        "longitude": -100.4737,
+        "address": "123 Main Street"
+      }
+    ]
+  }
+]
+```
+
+## 📁 Project Structure
+
+```
+├── client/
+│   ├── public/
+│   ├── src/
+│   │   ├── MapComponent.js    # Main map component
+│   │   ├── index.js           # Entry point
+│   │   └── index.css          # Global styles
+│   └── package.json
+├── server.js                  # Backend server
+├── package.json
+└── .env                       # Environment variables
+```
+
+## 🔧 Development Notes
+
+- PostgreSQL service must be running
+- PostGIS extension must be enabled
+- Frontend runs on port 3000
+- Backend API runs on port 5000
+- Ensure all environment variables are properly set
+
+
+## ❗ Troubleshooting
+
+- **Database Connection Issues**: Verify PostgreSQL service is running and credentials are correct
+- **Map Not Loading**: Check if Leaflet CSS is properly imported
+- **API Errors**: Ensure backend server is running and CORS is properly configured
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Leaflet.js for the mapping library
+- PostGIS for spatial queries
+- McDonald's store data from Kaggle
