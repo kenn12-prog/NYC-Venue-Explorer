@@ -107,8 +107,8 @@ npm start
 3. Select the number of stores to display (5-20)
 4. Click "Search" to find nearby McDonald's locations
 5. View results on the interactive map:
-   - 🔴 Red marker: Your selected location
-   - 📍 Blue markers: McDonald's store locations
+   -  Red marker: Your selected location
+   -  Blue markers: McDonald's store locations
 
 ## 🔌 API Endpoints
 
