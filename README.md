@@ -1,6 +1,6 @@
 # McDonald's Store Locator 🍔
 
-An interactive web application that helps users find nearby McDonald's locations using React and Leaflet.js for the frontend, with Node.js and PostGIS-enabled PostgreSQL for spatial queries.
+An interactive web application that helps users find nearby McDonald's locations using React and Leaflet.js for the frontend, with Node.js and PostGIS-enabled PostgreSQL for spatial and temporal queries.
 <img width="800" alt="UI" src="https://github.com/user-attachments/assets/998ba2c4-f69d-4f69-9de9-13847bca1d63" />
 
 ## ✨ Features
@@ -10,6 +10,7 @@ An interactive web application that helps users find nearby McDonald's locations
 - 🎯 Display nearest McDonald's locations with custom markers
 - 🎨 Modern, responsive UI design
 - 📏 Distance-based store searching
+- ⌚️ time-range selection
 - 🔄 Real-time map updates
 
 ## 🛠️ Tech Stack
