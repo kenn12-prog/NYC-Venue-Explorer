@@ -12,6 +12,27 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
 
+// 修改 homeIcon 定义
+const homeIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+// storeIcon 保持使用蓝色默认图标
+const storeIcon = new L.Icon({
+  iconUrl: require('leaflet/dist/images/marker-icon.png'),
+  iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
+  shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
 // Component to fix map rendering issues
 const FixMap = () => {
     const map = useMap();
@@ -27,7 +48,7 @@ const FixMap = () => {
 const MapUpdater = ({ center }) => {
   const map = useMap();
   useEffect(() => {
-    map.setView(center, 13);
+    map.setView(center, 6);
   }, [center, map]);
   return null;
 };
@@ -56,7 +77,7 @@ const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, limit, se
                 <input 
                     type="number" 
                     value={latitude} 
-                    onChange={(e) => setLatitude(parseFloat(e.target.value) || 0)}
+                    onChange={(e) => setLatitude(e.target.value)}
                     style={{
                         padding: "12px",
                         border: "1px solid #ddd",
@@ -72,7 +93,7 @@ const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, limit, se
                 <input 
                     type="number" 
                     value={longitude} 
-                    onChange={(e) => setLongitude(parseFloat(e.target.value) || 0)}
+                    onChange={(e) => setLongitude(e.target.value)}
                     style={{
                         padding: "12px",
                         border: "1px solid #ddd",
@@ -127,8 +148,8 @@ const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, limit, se
 
 // Main Map Component
 const MapComponent = () => {
-    const [latitude, setLatitude] = useState(35.2304);
-    const [longitude, setLongitude] = useState(-100.4737);
+    const [latitude, setLatitude] = useState(30);
+    const [longitude, setLongitude] = useState(-81.5);
     const [limit, setLimit] = useState(5);
     const [stores, setStores] = useState([]);
 
@@ -168,18 +189,30 @@ const MapComponent = () => {
             >
                 <MapUpdater center={[latitude, longitude]} />
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                {/* Search center marker */}
-                <Marker position={[latitude, longitude]}>
+                {/* 将默认位置标记的图标改为 homeIcon */}
+                <Marker position={[latitude, longitude]} icon={homeIcon}>
                     <Popup>Current position</Popup>
                 </Marker>
                 {stores.map((store, index) => (
-                    <Marker key={index} position={[store.latitude, store.longitude]}>
+                    <Marker 
+                        key={index} 
+                        position={[store.latitude, store.longitude]} 
+                        icon={storeIcon}
+                    >
                         <Popup>{store.address}</Popup>
                     </Marker>
                 ))}
                 <FixMap />
             </MapContainer>
-            <SearchPanel latitude={latitude} setLatitude={setLatitude} longitude={longitude} setLongitude={setLongitude} limit={limit} setLimit={setLimit} searchStores={searchStores} />
+            <SearchPanel 
+                latitude={latitude} 
+                setLatitude={setLatitude} 
+                longitude={longitude} 
+                setLongitude={setLongitude} 
+                limit={limit} 
+                setLimit={setLimit} 
+                searchStores={searchStores} 
+            />
         </div>
     );
 };
