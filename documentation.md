@@ -104,7 +104,7 @@ List the localhost port used by the backend and frontend. E.g.,
 ## 8. UI Address
 E.g., [https:\\localhost:3000](http://localhost:3000/)
 
-## 8. Additional Notes
+## 9. Additional Notes
 - Any assumptions made in the project.
 - Acknowledgement to external resources (lib, packages, GPTs) or research papers.
 
