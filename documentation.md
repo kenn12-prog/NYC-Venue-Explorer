@@ -110,4 +110,4 @@ E.g., [https:\\localhost:3000](http://localhost:3000/)
 
 ---
 ### Note
-You are welcome to explore the potential of this project using Large Language Models (LLMs) such as ChatGPT or LLM-powered applications (e.g., Cursor). However, DeepSake and any applications supported by DeepSake are **NOT allowed** for this project!
+You are welcome to explore the potential of this project using Large Language Models (LLMs) such as ChatGPT or LLM-powered applications (e.g., Cursor). However, DeepSeek and any applications supported by DeepSeek are **NOT allowed** for this project!
