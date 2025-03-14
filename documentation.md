@@ -8,7 +8,7 @@
 
 ### Web Application Functions
 - List the main functionalities of the web application.
-- Describe how spatial-temporal queries are used in the application.
+- Describe how high-dimensional queries are used in the application.
 
 ---
 
