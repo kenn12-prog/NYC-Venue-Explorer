@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import axios from "axios";
 import L from "leaflet";
 import 'leaflet/dist/leaflet.css';
+import { ImageOverlay } from "react-leaflet";
 
 // Fix Leaflet default icon issue
 delete L.Icon.Default.prototype._getIconUrl;
@@ -413,7 +414,7 @@ const MapComponent = () => {
             <MapContainer
                 center={[latitude, longitude]}
                 zoom={13}
-                style={{ height: "100%", width: "100%" }}
+                style={{ height: "100vh", width: "100%" }}
             >
                 <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
