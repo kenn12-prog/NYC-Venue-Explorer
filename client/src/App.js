@@ -1,10 +1,10 @@
-import React from "react";
-import MapComponent from "./MapComponent";
+import React from 'react';
+import './App.css';
+import MapComponent from './MapComponent';
 
 function App() {
     return (
-        <div>
-            <h1>McDonald's Store Locator</h1>
+        <div className="App">
             <MapComponent />
         </div>
     );

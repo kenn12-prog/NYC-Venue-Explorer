@@ -21,7 +21,7 @@ const homeIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-const storeIcon = new L.Icon({
+const venueIcon = new L.Icon({
   iconUrl: require('leaflet/dist/images/marker-icon.png'),
   iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
@@ -44,12 +44,12 @@ const FixMap = () => {
 const MapUpdater = ({ center }) => {
   const map = useMap();
   useEffect(() => {
-    map.setView(center, 6);
+    map.setView(center, 13);
   }, [center, map]);
   return null;
 };
 
-const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, limit, setLimit, days, setDays, searchStores }) => {
+const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, radius, setRadius, category, setCategory, categories, searchVenues }) => {
     return (
         <div style={{
             position: "absolute",
@@ -68,12 +68,12 @@ const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, limit, se
             border: "1px solid rgba(255, 255, 255, 0.18)"
         }}>
             <div style={{
-                backgroundColor: "#FF6B6B",
+                backgroundColor: "#2C3E50",
                 margin: "-25px -25px 20px -25px",
                 padding: "20px",
                 borderRadius: "20px 20px 0 0",
                 textAlign: "center",
-                boxShadow: "0 4px 15px rgba(255, 107, 107, 0.2)"
+                boxShadow: "0 4px 15px rgba(44, 62, 80, 0.2)"
             }}>
                 <h2 style={{ 
                     color: "white", 
@@ -85,9 +85,16 @@ const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, limit, se
                     justifyContent: "center",
                     gap: "8px"
                 }}>
-                    <span style={{ fontSize: "24px" }}>🍔</span>
-                    Find McDonald's
+                    <span style={{ fontSize: "24px" }}>🗽</span>
+                    NYC Venue Explorer
                 </h2>
+                <div style={{
+                    color: "rgba(255, 255, 255, 0.8)",
+                    fontSize: "14px",
+                    marginTop: "5px"
+                }}>
+                    Discover Popular Places in New York
+                </div>
             </div>
 
             <div className="input-group">
@@ -112,7 +119,7 @@ const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, limit, se
                         transition: "all 0.3s ease",
                         outline: "none"
                     }}
-                    onFocus={(e) => e.target.style.borderColor = "#FF6B6B"}
+                    onFocus={(e) => e.target.style.borderColor = "#4A90E2"}
                     onBlur={(e) => e.target.style.borderColor = "#e0e0e0"}
                 />
             </div>
@@ -139,7 +146,7 @@ const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, limit, se
                         transition: "all 0.3s ease",
                         outline: "none"
                     }}
-                    onFocus={(e) => e.target.style.borderColor = "#FF6B6B"}
+                    onFocus={(e) => e.target.style.borderColor = "#4A90E2"}
                     onBlur={(e) => e.target.style.borderColor = "#e0e0e0"}
                 />
             </div>
@@ -151,10 +158,37 @@ const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, limit, se
                     color: "#4a4a4a",
                     fontSize: "14px",
                     fontWeight: "500"
-                }}>Number of restaurants:</label>
+                }}>Search Radius (meters):</label>
+                <input 
+                    type="number" 
+                    value={radius} 
+                    onChange={(e) => setRadius(e.target.value)}
+                    style={{
+                        padding: "10px 14px",
+                        border: "2px solid #e0e0e0",
+                        borderRadius: "10px",
+                        fontSize: "14px",
+                        width: "calc(100% - 32px)",
+                        backgroundColor: "#f8f9fa",
+                        transition: "all 0.3s ease",
+                        outline: "none"
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = "#4A90E2"}
+                    onBlur={(e) => e.target.style.borderColor = "#e0e0e0"}
+                />
+            </div>
+
+            <div className="input-group">
+                <label style={{
+                    display: "block",
+                    marginBottom: "8px",
+                    color: "#4a4a4a",
+                    fontSize: "14px",
+                    fontWeight: "500"
+                }}>Venue Category:</label>
                 <select 
-                    value={limit} 
-                    onChange={(e) => setLimit(parseInt(e.target.value) || 5)}
+                    value={category} 
+                    onChange={(e) => setCategory(e.target.value)}
                     style={{
                         padding: "10px 14px",
                         border: "2px solid #e0e0e0",
@@ -168,44 +202,20 @@ const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, limit, se
                         appearance: "none"
                     }}
                 >
-                    <option value="5">5 restaurants</option>
-                    <option value="10">10 restaurants</option>
-                    <option value="15">15 restaurants</option>
-                    <option value="20">20 restaurants</option>
+                    <option value="">All Categories</option>
+                    {categories.map((cat, index) => (
+                        <option key={index} value={cat.venue_category_name}>
+                            {cat.venue_category_name}
+                        </option>
+                    ))}
                 </select>
             </div>
 
-            <div className="input-group">
-                <label style={{
-                    display: "block",
-                    marginBottom: "8px",
-                    color: "#4a4a4a",
-                    fontSize: "14px",
-                    fontWeight: "500"
-                }}>4 Star Reviews in the Last X Days:</label>
-                <input 
-                    type="text" 
-                    value={days} 
-                    onChange={(e) => setDays(e.target.value)} 
-                    style={{
-                        padding: "10px 14px",
-                        border: "2px solid #e0e0e0",
-                        borderRadius: "10px",
-                        fontSize: "14px",
-                        width: "calc(100% - 32px)",
-                        backgroundColor: "#f8f9fa",
-                        transition: "all 0.3s ease",
-                        outline: "none"
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = "#FF6B6B"}
-                    onBlur={(e) => e.target.style.borderColor = "#e0e0e0"}
-                />
-            </div>
             <button 
-                onClick={searchStores}
+                onClick={searchVenues}
                 style={{
                     padding: "12px 20px",
-                    backgroundColor: "#FF6B6B",
+                    backgroundColor: "#2C3E50",
                     color: "white",
                     border: "none",
                     borderRadius: "10px",
@@ -218,77 +228,237 @@ const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, limit, se
                     alignItems: "center",
                     justifyContent: "center",
                     gap: "8px",
-                    boxShadow: "0 4px 15px rgba(255, 107, 107, 0.2)"
+                    boxShadow: "0 4px 15px rgba(44, 62, 80, 0.2)"
                 }}
                 onMouseOver={(e) => {
-                    e.target.style.backgroundColor = "#FF5252";
+                    e.target.style.backgroundColor = "#34495E";
                     e.target.style.transform = "translateY(-2px)";
                 }}
                 onMouseOut={(e) => {
-                    e.target.style.backgroundColor = "#FF6B6B";
+                    e.target.style.backgroundColor = "#2C3E50";
                     e.target.style.transform = "translateY(0)";
                 }}
             >
-                🔍 Search
+                🔍 Search Venues
             </button>
         </div>
     );
 };
 
+// 新增：时间模式分析面板
+const TimePatternPanel = ({ data }) => {
+    if (!data || data.length === 0) return null;
+    
+    return (
+        <div style={{
+            position: "absolute",
+            right: "20px",
+            top: "20px",
+            width: "300px",
+            backgroundColor: "rgba(255, 255, 255, 0.95)",
+            padding: "20px",
+            borderRadius: "15px",
+            boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+            zIndex: 1000
+        }}>
+            <h3 style={{ margin: "0 0 15px 0" }}>Popular Categories</h3>
+            {data.map((item, index) => (
+                <div key={index} style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginBottom: "8px",
+                    fontSize: "14px"
+                }}>
+                    <span>{item.venue_category_name}</span>
+                    <span>{item.visit_count} visits</span>
+                </div>
+            ))}
+        </div>
+    );
+};
+
+// 新增：热门场所面板
+const PopularVenuesPanel = ({ data }) => {
+    if (!data || data.length === 0) return null;
+
+    return (
+        <div style={{
+            position: "absolute",
+            right: "20px",
+            top: "250px",
+            width: "300px",
+            backgroundColor: "rgba(255, 255, 255, 0.95)",
+            padding: "20px",
+            borderRadius: "15px",
+            boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+            zIndex: 1000,
+            maxHeight: "400px",
+            overflowY: "auto"
+        }}>
+            <h3 style={{ margin: "0 0 15px 0" }}>Popular Venues Nearby</h3>
+            {data.map((venue, index) => (
+                <div key={index} style={{
+                    marginBottom: "15px",
+                    padding: "10px",
+                    backgroundColor: "#f8f9fa",
+                    borderRadius: "8px"
+                }}>
+                    <div style={{ fontWeight: "500" }}>{venue.venue_category_name}</div>
+                    <div style={{ fontSize: "14px", color: "#666" }}>
+                        <div>Check-ins: {venue.checkin_count}</div>
+                        <div>Unique visitors: {venue.unique_visitors}</div>
+                        <div>Distance: {venue.distance}m</div>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+};
+
 const MapComponent = () => {
-    const [latitude, setLatitude] = useState(30);
-    const [longitude, setLongitude] = useState(-81.5);
-    const [limit, setLimit] = useState(5);
-    const [days, setDays] = useState(2);
-    const [stores, setStores] = useState([]);
+    const [latitude, setLatitude] = useState(40.7128);
+    const [longitude, setLongitude] = useState(-74.0060);
+    const [radius, setRadius] = useState(5000);
+    const [category, setCategory] = useState("");
+    const [venues, setVenues] = useState([]);
+    const [categories, setCategories] = useState([]);
+    
+    // 新增状态
+    const [timePatternData, setTimePatternData] = useState([]);
+    const [popularVenues, setPopularVenues] = useState([]);
+    const [selectedTimeSlot, setSelectedTimeSlot] = useState("all");
+    const [selectedDayType, setSelectedDayType] = useState("all");
 
-    const searchStores = async () => {
-        const searchParams = {
-            latitude: parseFloat(latitude),
-            longitude: parseFloat(longitude),
-            limit: parseInt(limit),
-            days: parseInt(days)
-        };
-
-        console.log("Sending search request with params:", searchParams);
-
-        try {
-            const res = await axios.get("http://localhost:5001/search", { params: searchParams });
-            console.log("API response:", res);
-            
-            if (res.data && res.data.length > 0 && res.data[0].closest_shops) {
-                setStores(res.data[0].closest_shops);
-            } else {
-                alert("No McDonald's locations found nearby. Try another location.");
+    useEffect(() => {
+        // 获取所有可用的场所类别
+        const fetchCategories = async () => {
+            try {
+                const response = await axios.get('http://localhost:5001/categories');
+                setCategories(response.data);
+            } catch (error) {
+                console.error('Error fetching categories:', error);
             }
-        } catch (err) {
-            console.error("Search error:", err.response || err);
-            alert(err.response?.data?.error || "Error during search. Check console.");
+        };
+        fetchCategories();
+    }, []);
+
+    // 新增：获取时间模式数据
+    const fetchTimePatterns = async () => {
+        try {
+            const response = await axios.get('http://localhost:5001/time-patterns', {
+                params: {
+                    dayType: selectedDayType,
+                    timeSlot: selectedTimeSlot
+                }
+            });
+            setTimePatternData(response.data);
+        } catch (error) {
+            console.error('Error fetching time patterns:', error);
+        }
+    };
+
+    // 新增：获取热门场所数据
+    const fetchPopularVenues = async () => {
+        try {
+            const response = await axios.get('http://localhost:5001/popular-venues', {
+                params: {
+                    latitude,
+                    longitude,
+                    radius
+                }
+            });
+            setPopularVenues(response.data);
+        } catch (error) {
+            console.error('Error fetching popular venues:', error);
+        }
+    };
+
+    // 修改searchVenues函数来同时获取所有数据
+    const searchVenues = async () => {
+        try {
+            const [venuesRes, popularRes, patternsRes] = await Promise.all([
+                axios.get('http://localhost:5001/search', {
+                    params: {
+                        latitude,
+                        longitude,
+                        radius,
+                        category: category || undefined
+                    }
+                }),
+                axios.get('http://localhost:5001/popular-venues', {
+                    params: {
+                        latitude,
+                        longitude,
+                        radius
+                    }
+                }),
+                axios.get('http://localhost:5001/time-patterns', {
+                    params: {
+                        dayType: selectedDayType,
+                        timeSlot: selectedTimeSlot
+                    }
+                })
+            ]);
+
+            setVenues(venuesRes.data.venues || []);
+            setPopularVenues(popularRes.data);
+            setTimePatternData(patternsRes.data);
+        } catch (error) {
+            console.error('Error searching data:', error);
         }
     };
 
     return (
-        <div style={{ position: "relative", width: "100vw", height: "100vh" }}>
-            <MapContainer center={[latitude, longitude]} zoom={13} style={{ width: "100%", height: "100%", zIndex: 1 }}>
+        <div style={{ height: "100vh", width: "100vw", position: "relative" }}>
+            <MapContainer
+                center={[latitude, longitude]}
+                zoom={13}
+                style={{ height: "100%", width: "100%" }}
+            >
+                <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                />
+                <FixMap />
                 <MapUpdater center={[latitude, longitude]} />
-                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                
+                {/* User's selected location */}
                 <Marker position={[latitude, longitude]} icon={homeIcon}>
-                    <Popup>Current position</Popup>
+                    <Popup>Selected Location</Popup>
                 </Marker>
-                {stores.map((store, index) => (
-                    <Marker key={index} position={[store.latitude, store.longitude]} icon={storeIcon}>
-                        <Popup>{store.address}</Popup>
+
+                {/* Nearby venues */}
+                {venues.map((venue, index) => (
+                    <Marker
+                        key={index}
+                        position={[venue.latitude, venue.longitude]}
+                        icon={venueIcon}
+                    >
+                        <Popup>
+                            <div>
+                                <h3>{venue.venue_category_name}</h3>
+                                <p>Distance: {venue.distance}m</p>
+                            </div>
+                        </Popup>
                     </Marker>
                 ))}
-                <FixMap />
             </MapContainer>
-            <SearchPanel 
-                latitude={latitude} setLatitude={setLatitude} 
-                longitude={longitude} setLongitude={setLongitude} 
-                limit={limit} setLimit={setLimit} 
-                days={days} setDays={setDays} 
-                searchStores={searchStores} 
+
+            <SearchPanel
+                latitude={latitude}
+                setLatitude={setLatitude}
+                longitude={longitude}
+                setLongitude={setLongitude}
+                radius={radius}
+                setRadius={setRadius}
+                category={category}
+                setCategory={setCategory}
+                categories={categories}
+                searchVenues={searchVenues}
             />
+
+            <TimePatternPanel data={timePatternData} />
+            <PopularVenuesPanel data={popularVenues} />
         </div>
     );
 };
