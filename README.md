@@ -1,4 +1,4 @@
-# Web Application Project Documentation
+# 
 
 ## 1. Project Overview
 
@@ -127,53 +127,181 @@ npm install
 
 ## 5. Queries Implemented
 
-### Spatial Search
-- **Task**: Find venues within a specified radius
-- **Query**:
-  ```sql
-  WITH nearby_venues AS (
-    SELECT 
-      venue_id, venue_category_name,
-      ST_Distance(geom, ST_SetSRID(ST_MakePoint($1, $2), 4326)) * 111139 as distance
-    FROM foursquare_checkins
-    WHERE ST_DWithin(geom, ST_SetSRID(ST_MakePoint($1, $2), 4326), $3)
-  )
-  SELECT * FROM nearby_venues ORDER BY distance;
-  ```
-- **Error Handling**: Returns empty array if no venues found
+### Query 1: Spatial Search
+- **Task Description**: Find venues within a specified radius of a given location, with optional category filtering
+- **Real-world Application**: Helps users discover nearby venues based on their current location and interests
 
-### Temporal Analysis
-- **Task**: Analyze venue popularity by time periods
-- **Query**:
-  ```sql
-  WITH time_slots AS (
-    SELECT 
-      venue_id,
-      CASE WHEN EXTRACT(DOW FROM utc_time) IN (0, 6) THEN 'weekend'
-           ELSE 'weekday' END as day_type,
-      CASE WHEN EXTRACT(HOUR FROM utc_time) BETWEEN 6 AND 11 THEN 'morning'
-           WHEN EXTRACT(HOUR FROM utc_time) BETWEEN 12 AND 17 THEN 'afternoon'
-           WHEN EXTRACT(HOUR FROM utc_time) BETWEEN 18 AND 23 THEN 'evening'
-           ELSE 'night' END as time_slot
-    FROM foursquare_checkins
-  )
-  SELECT day_type, time_slot, COUNT(*) as visits
-  FROM time_slots
-  GROUP BY day_type, time_slot;
-  ```
-
-### Popular Venues
-- **Task**: Identify most visited venues
-- **Query**:
-  ```sql
+### Query 1: SQL Query
+```sql
+WITH nearby_venues AS (
   SELECT 
-    venue_id, venue_category_name,
-    COUNT(*) as checkin_count,
-    COUNT(DISTINCT user_id) as unique_visitors
+    venue_id,
+    venue_category_name,
+    latitude,
+    longitude,
+    ST_Distance(
+      geom,
+      ST_SetSRID(ST_MakePoint($1, $2), 4326)
+    ) * 111139 as distance
   FROM foursquare_checkins
-  GROUP BY venue_id, venue_category_name
-  ORDER BY checkin_count DESC;
-  ```
+  WHERE ST_DWithin(
+    geom,
+    ST_SetSRID(ST_MakePoint($1, $2), 4326),
+    $3 / 111139.0
+  )
+  AND venue_category_name = $4  -- Optional category filter
+  GROUP BY venue_id, venue_category_name, latitude, longitude, geom
+  ORDER BY distance
+  LIMIT 50
+)
+SELECT json_agg(
+  json_build_object(
+    'venue_id', venue_id,
+    'category', venue_category_name,
+    'latitude', latitude,
+    'longitude', longitude,
+    'distance', ROUND(distance::numeric, 2)
+  )
+) as venues
+FROM nearby_venues;
+```
+- **Variables**:
+  - `$1`: Longitude of search center
+  - `$2`: Latitude of search center
+  - `$3`: Search radius in meters
+  - `$4`: Optional venue category name
+
+### Query 1: Unexpected Value Handling
+- Invalid coordinates return 400 status with error message
+- Missing radius defaults to 5000 meters
+- Empty category returns all venues
+- No venues found returns empty array
+
+### Query 2: Time Pattern Analysis
+- **Task Description**: Analyze venue popularity patterns based on day type (weekday/weekend) and time slots
+- **Real-world Application**: Helps businesses and visitors understand peak visiting hours and optimal timing
+
+### Query 2: SQL Query
+```sql
+WITH parsed_times AS (
+  SELECT 
+    venue_id,
+    venue_category_name,
+    EXTRACT(DOW FROM utc_time::timestamp) as day_of_week,
+    EXTRACT(HOUR FROM utc_time::timestamp) as hour_of_day
+  FROM foursquare_checkins
+)
+SELECT 
+  venue_category_name,
+  COUNT(*) as visit_count
+FROM parsed_times
+WHERE 
+  CASE 
+    WHEN $1 = 'weekend' THEN day_of_week IN (0, 6)
+    WHEN $1 = 'weekday' THEN day_of_week BETWEEN 1 AND 5
+    ELSE TRUE
+  END
+  AND
+  CASE 
+    WHEN $2 = 'morning' THEN hour_of_day BETWEEN 6 AND 11
+    WHEN $2 = 'afternoon' THEN hour_of_day BETWEEN 12 AND 17
+    WHEN $2 = 'evening' THEN hour_of_day BETWEEN 18 AND 23
+    WHEN $2 = 'night' THEN hour_of_day BETWEEN 0 AND 5
+    ELSE TRUE
+  END
+GROUP BY venue_category_name
+ORDER BY visit_count DESC
+LIMIT 10;
+```
+- **Variables**:
+  - `$1`: Day type filter ('weekend', 'weekday', or any)
+  - `$2`: Time slot filter ('morning', 'afternoon', 'evening', 'night', or any)
+
+### Query 2: Unexpected Value Handling
+- Invalid day type or time slot defaults to showing all data
+- Returns top 10 categories by visit count
+- Empty result set returns empty array
+
+### Query 3: Popular Venues Analysis
+- **Task Description**: Identify the most popular venues within a given area based on check-in counts and unique visitors
+- **Real-world Application**: Helps identify trending locations and analyze venue performance
+
+### Query 3: SQL Query
+```sql
+WITH venue_stats AS (
+  SELECT 
+    venue_id,
+    venue_category_name,
+    latitude,
+    longitude,
+    COUNT(*) as checkin_count,
+    COUNT(DISTINCT user_id) as unique_visitors,
+    ST_Distance(
+      geom,
+      ST_SetSRID(ST_MakePoint($1, $2), 4326)
+    ) * 111139 as distance
+  FROM foursquare_checkins
+  WHERE ST_DWithin(
+    geom,
+    ST_SetSRID(ST_MakePoint($1, $2), 4326),
+    $3 / 111139.0
+  )
+  GROUP BY venue_id, venue_category_name, latitude, longitude, geom
+)
+SELECT 
+  venue_id,
+  venue_category_name,
+  latitude,
+  longitude,
+  checkin_count,
+  unique_visitors,
+  ROUND(distance::numeric, 2) as distance
+FROM venue_stats
+ORDER BY checkin_count DESC
+LIMIT 20;
+```
+- **Variables**:
+  - `$1`: Longitude of search center
+  - `$2`: Latitude of search center
+  - `$3`: Search radius in meters (defaults to 5000)
+
+### Query 3: Unexpected Value Handling
+- Invalid coordinates or radius return error message
+- Missing radius defaults to 5000 meters
+- Returns top 20 venues by check-in count
+- Empty result set returns empty array
+
+### Query 4: Category Trends Analysis
+- **Task Description**: Analyze hourly visit patterns for different venue categories
+- **Real-world Application**: Helps understand peak hours for different types of venues
+
+### Query 4: SQL Query
+```sql
+WITH hourly_stats AS (
+  SELECT 
+    venue_category_name,
+    EXTRACT(HOUR FROM utc_time::timestamp) as hour_of_day,
+    COUNT(*) as visit_count
+  FROM foursquare_checkins
+  GROUP BY venue_category_name, hour_of_day
+)
+SELECT 
+  venue_category_name,
+  json_object_agg(
+    hour_of_day::text, 
+    visit_count
+  ) as hourly_distribution
+FROM hourly_stats
+GROUP BY venue_category_name
+ORDER BY SUM(visit_count) DESC
+LIMIT 10;
+```
+- **Variables**: None (analyzes all data)
+
+### Query 4: Unexpected Value Handling
+- Returns top 10 categories by total visit count
+- Hourly distribution is aggregated as a JSON object
+- Empty result set returns empty array
 
 ## 6. How to Run the Application
 
