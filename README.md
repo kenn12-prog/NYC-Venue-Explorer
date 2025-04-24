@@ -1,204 +1,217 @@
-# NYC Venue Explorer 🗽
+# Web Application Project Documentation
 
-An interactive web application that helps users explore popular venues in New York City using React and Leaflet.js for the frontend, with Node.js and PostGIS-enabled PostgreSQL for spatial and temporal analysis of Foursquare check-in data.
+## 1. Project Overview
+
+### Motivation
+- **Problem Solved**: NYC Venue Explorer addresses the challenge of efficiently discovering and analyzing venue patterns in New York City, helping users make data-driven decisions about venue visits.
+
+- **Real-world Applications**:
+  - Tourists can plan optimal visit times to popular locations
+  - Business owners can analyze competitor patterns
+  - Urban planners can study city dynamics
+  - Event organizers can select venues based on popularity
+
+### Web Application Functions
+- Interactive map-based venue exploration using Leaflet.js
+- High-dimensional spatial queries combining location, time, and categories
+- Real-time visualization of venue patterns
+- Advanced analytics including:
+  - Temporal popularity patterns
+  - Category-based trend analysis
+  - Visitor count statistics
 
 <img width="800" alt="UI Screenshot" src="client/public/pic1.png" />
 
-## ✨ Features
+## 2. Technology Stack
 
-- 🗺️ Interactive map visualization using Leaflet.js
-- 📍 Custom location search with latitude/longitude input
-- 🎯 Display nearby venues with category filtering
-- 🎨 Modern, responsive UI design
-- 📏 Distance-based venue searching
-- 📊 Popular venue analysis
-- ⏰ Time-based venue popularity patterns
-- 👥 Unique visitor statistics
+### Programming Languages & Frameworks
+- **Backend**: Node.js with Express.js
+- **Frontend**: React.js with Leaflet.js
+- **Database**: PostgreSQL with PostGIS extension
 
-## 🛠️ Tech Stack
+### Packages & Dependencies
+- **Backend Packages**:
+  ```json
+  {
+    "express": "^4.17.1",
+    "pg": "^8.7.1",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0"
+  }
+  ```
+
+- **Frontend Packages**:
+  ```json
+  {
+    "react": "^17.0.2",
+    "react-leaflet": "^3.2.0",
+    "axios": "^0.24.0",
+    "react-icons": "^4.3.1"
+  }
+  ```
+
+## 3. Setup Instructions
+
+### Environment Setup
+```bash
+# Install PostgreSQL and PostGIS
+brew install postgresql postgis  # MacOS
+sudo apt-get install postgresql postgresql-contrib postgis  # Ubuntu
+
+# Install Node.js dependencies
+npm install
+```
+
+### Database Configuration
+- **Database Schema**:
+  ```sql
+  CREATE DATABASE nyc_venues;
+  \c nyc_venues
+  CREATE EXTENSION postgis;
+
+  CREATE TABLE foursquare_checkins (
+      user_id TEXT,
+      venue_id TEXT,
+      venue_category_id TEXT,
+      venue_category_name TEXT,
+      latitude FLOAT,
+      longitude FLOAT,
+      timezone_offset INTEGER,
+      utc_time TIMESTAMP,
+      geom GEOMETRY(Point, 4326)
+  );
+  ```
+
+- **Data Loading**:
+  ```sql
+  -- Import from TSV file
+  COPY foursquare_checkins(
+      user_id, venue_id, venue_category_id,
+      venue_category_name, latitude, longitude,
+      timezone_offset, utc_time
+  ) FROM '/path/to/dataset_TSMC2014_NYC.txt'
+  DELIMITER '\t' CSV HEADER;
+
+  -- Create spatial geometry
+  UPDATE foursquare_checkins
+  SET geom = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326);
+  CREATE INDEX idx_foursquare_geom ON foursquare_checkins USING GIST(geom);
+  ```
+
+## 4. Code Structure
 
 ### Frontend
-- React 
-- Leaflet.js (react-leaflet)
-- Axios for API calls
-- Modern CSS3 with Flexbox
+- Location: `client/src/`
+  - `App.js`: Main application component
+  - `MapComponent.js`: Interactive map with venue markers
+  - `components/`: UI components for data visualization
 
 ### Backend
-- Node.js
-- Express.js
-- PostgreSQL with PostGIS extension
-- CORS for cross-origin requests
+- Location: `server.js`
+- Key endpoints:
+  ```javascript
+  app.get('/search', (req, res) => {...})       // Spatial search
+  app.get('/time-patterns', (req, res) => {...}) // Temporal analysis
+  app.get('/popular-venues', (req, res) => {...}) // Popularity metrics
+  ```
 
-## 📊 Dataset
+### Database Connection
+- Location: `.env`
+  ```bash
+  DB_HOST=localhost
+  DB_USER=postgres
+  DB_PASSWORD=your_password
+  DB_NAME=nyc_venues
+  DB_PORT=5432
+  ```
 
-This application uses the Foursquare check-in dataset collected from April 2012 to February 2013 in New York City. The dataset includes:
+## 5. Queries Implemented
 
-- 227,428 check-ins in New York City
-- Venue categories and locations
-- Temporal check-in patterns
-- User anonymized data
+### Spatial Search
+- **Task**: Find venues within a specified radius
+- **Query**:
+  ```sql
+  WITH nearby_venues AS (
+    SELECT 
+      venue_id, venue_category_name,
+      ST_Distance(geom, ST_SetSRID(ST_MakePoint($1, $2), 4326)) * 111139 as distance
+    FROM foursquare_checkins
+    WHERE ST_DWithin(geom, ST_SetSRID(ST_MakePoint($1, $2), 4326), $3)
+  )
+  SELECT * FROM nearby_venues ORDER BY distance;
+  ```
+- **Error Handling**: Returns empty array if no venues found
 
-Dataset features:
-- User ID (anonymized)
-- Venue ID (Foursquare)
-- Venue category ID and name
-- Latitude and Longitude
-- Timezone offset
-- UTC timestamp
+### Temporal Analysis
+- **Task**: Analyze venue popularity by time periods
+- **Query**:
+  ```sql
+  WITH time_slots AS (
+    SELECT 
+      venue_id,
+      CASE WHEN EXTRACT(DOW FROM utc_time) IN (0, 6) THEN 'weekend'
+           ELSE 'weekday' END as day_type,
+      CASE WHEN EXTRACT(HOUR FROM utc_time) BETWEEN 6 AND 11 THEN 'morning'
+           WHEN EXTRACT(HOUR FROM utc_time) BETWEEN 12 AND 17 THEN 'afternoon'
+           WHEN EXTRACT(HOUR FROM utc_time) BETWEEN 18 AND 23 THEN 'evening'
+           ELSE 'night' END as time_slot
+    FROM foursquare_checkins
+  )
+  SELECT day_type, time_slot, COUNT(*) as visits
+  FROM time_slots
+  GROUP BY day_type, time_slot;
+  ```
 
-## 🚀 Installation Guide
+### Popular Venues
+- **Task**: Identify most visited venues
+- **Query**:
+  ```sql
+  SELECT 
+    venue_id, venue_category_name,
+    COUNT(*) as checkin_count,
+    COUNT(DISTINCT user_id) as unique_visitors
+  FROM foursquare_checkins
+  GROUP BY venue_id, venue_category_name
+  ORDER BY checkin_count DESC;
+  ```
 
-### 1. Database Setup
+## 6. How to Run the Application
 
-#### Install PostgreSQL and PostGIS
 ```bash
-# For MacOS
-brew install postgresql
-brew install postgis
-
-# For Ubuntu
-sudo apt-get install postgresql postgresql-contrib
-sudo apt-get install postgis
-```
-
-#### Create Database and Enable PostGIS
-```sql
-CREATE DATABASE nyc_venues;
-\c nyc_venues
-CREATE EXTENSION postgis;
-
--- Create table for venues
-CREATE TABLE foursquare_checkins (
-    user_id TEXT,
-    venue_id TEXT,
-    venue_category_id TEXT,
-    venue_category_name TEXT,
-    latitude FLOAT,
-    longitude FLOAT,
-    timezone_offset INTEGER,
-    utc_time TIMESTAMP,
-    geom GEOMETRY(Point, 4326)
-);
-
--- Import data
-COPY foursquare_checkins(user_id, venue_id, venue_category_id, venue_category_name, latitude, longitude, timezone_offset, utc_time)
-FROM '/path/to/dataset_TSMC2014_NYC.txt'
-DELIMITER '\t' CSV HEADER;
-
--- Create spatial index
-UPDATE foursquare_checkins
-SET geom = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326);
-CREATE INDEX idx_foursquare_geom ON foursquare_checkins USING GIST(geom);
-```
-
-### 2. Backend Setup
-
-#### Clone and Install Dependencies
-```bash
-git clone <repository-url>
-cd <project-directory>
-npm install
-```
-
-#### Configure Environment
-Create `.env` file in the root directory:
-```env
-DB_HOST=localhost
-DB_USER=your_username
-DB_PASSWORD=your_password
-DB_NAME=nyc_venues
-DB_PORT=5432
-```
-
-#### Start the Server
-```bash
+# Start Backend Server
 node server.js
-# Server will run on http://localhost:5001
-```
 
-### 3. Frontend Setup
-
-```bash
+# Start Frontend (in a new terminal)
 cd client
-npm install
 npm start
-# Application will run on http://localhost:3000
 ```
 
-## 💻 Usage
+Additional steps:
+1. Ensure PostgreSQL service is running
+2. Verify database connection in `.env`
+3. Check console for any startup errors
 
-1. Open the application in your browser at `http://localhost:3000`
-2. Enter latitude and longitude coordinates (defaults to NYC center)
-3. Set your desired search radius (in meters)
-4. Optionally select a specific venue category
-5. Click "Search Venues" to find nearby locations
-6. View results on the interactive map:
-   - Red marker: Your selected location
-   - Blue markers: Nearby venues
-   - Popup information includes venue category and distance
+## 7. Port Usage
+- Backend API: http://localhost:5001
+- Frontend UI: http://localhost:3000
 
-## 🔌 API Endpoints
+## 8. UI Address
+Access the application at [http://localhost:3000](http://localhost:3000)
 
-### GET /search
-Finds nearby venues within the specified radius
+## 9. Additional Notes
 
-#### Parameters
-- `latitude` (number): Search center latitude
-- `longitude` (number): Search center longitude
-- `radius` (number): Search radius in meters
-- `category` (string, optional): Specific venue category to filter
+### Assumptions
+- Dataset is pre-loaded in PostgreSQL
+- PostGIS extension is available
+- Node.js v14+ is installed
 
-### GET /time-patterns
-Analyzes venue popularity by time periods
+### External Resources
+- **Dataset**: Yang et al. (2015) IEEE Trans. SMC
+- **Libraries**:
+  - Leaflet.js for mapping
+  - PostGIS for spatial queries
+- **Data Source**: Foursquare check-ins (2012-2013)
 
-#### Parameters
-- `dayType` (string): 'weekend' or 'weekday'
-- `timeSlot` (string): 'morning', 'afternoon', 'evening', or 'night'
-
-### GET /popular-venues
-Lists most popular venues in an area
-
-#### Parameters
-- `latitude` (number): Center latitude
-- `longitude` (number): Center longitude
-- `radius` (number): Search radius in meters
-
-## 📁 Project Structure
-
-```
-├── client/
-│   ├── public/
-│   │   ├── MapComponent.js    # Main map component
-│   │   ├── App.js            # Root component
-│   │   └── index.js          # Entry point
-│   └── package.json
-├── server.js                  # Backend server
-├── package.json
-└── .env                       # Environment variables
-```
-
-## 🔧 Development Notes
-
-- PostgreSQL service must be running
-- PostGIS extension must be enabled
-- Frontend runs on port 3000
-- Backend API runs on port 5001
-- Ensure all environment variables are properly set
-
-## ❗ Troubleshooting
-
-- **Database Connection Issues**: Verify PostgreSQL service is running and credentials are correct
-- **Map Not Loading**: Check if Leaflet CSS is properly imported
-- **API Errors**: Ensure backend server is running and CORS is properly configured
-- **No Results**: Verify the coordinates are within NYC area and the search radius is appropriate
-
-## 📄 License
-
-This project is licensed under the Apache-2.0 license - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Dataset from: Yang, D., Zhang, D., Zheng, V. W., & Yu, Z. (2015). Modeling User Activity Preference by Leveraging User Spatial Temporal Characteristics in LBSNs. IEEE Trans. on Systems, Man, and Cybernetics: Systems, 45(1), 129-142.
-- Leaflet.js for the mapping library
-- PostGIS for spatial queries
-- Foursquare for the original check-in data
+---
+### Note
+This project uses GPT-powered tools for development assistance while maintaining code quality and originality.

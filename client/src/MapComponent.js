@@ -4,6 +4,9 @@ import axios from "axios";
 import L from "leaflet";
 import 'leaflet/dist/leaflet.css';
 import { ImageOverlay } from "react-leaflet";
+import TimePatternPanel from './components/TimePatternPanel';
+import CategoryTrendsPanel from './components/CategoryTrendsPanel';
+import { FaTimes } from 'react-icons/fa';
 
 // Fix Leaflet default icon issue
 delete L.Icon.Default.prototype._getIconUrl;
@@ -246,57 +249,65 @@ const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, radius, s
     );
 };
 
-// 新增：时间模式分析面板
-const TimePatternPanel = ({ data }) => {
-    if (!data || data.length === 0) return null;
-    
-    return (
-        <div style={{
-            position: "absolute",
-            right: "20px",
-            top: "20px",
-            width: "300px",
-            backgroundColor: "rgba(255, 255, 255, 0.95)",
-            padding: "20px",
-            borderRadius: "15px",
-            boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
-            zIndex: 1000
-        }}>
-            <h3 style={{ margin: "0 0 15px 0" }}>Popular Categories</h3>
-            {data.map((item, index) => (
-                <div key={index} style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: "8px",
-                    fontSize: "14px"
-                }}>
-                    <span>{item.venue_category_name}</span>
-                    <span>{item.visit_count} visits</span>
-                </div>
-            ))}
-        </div>
-    );
-};
-
 // 新增：热门场所面板
 const PopularVenuesPanel = ({ data }) => {
+    const [isVisible, setIsVisible] = useState(true);
+    
     if (!data || data.length === 0) return null;
+    if (!isVisible) {
+        return (
+            <button 
+                onClick={() => setIsVisible(true)}
+                style={{
+                    position: "absolute",
+                    right: "20px",
+                    top: "20px",
+                    padding: "10px 20px",
+                    backgroundColor: "#2C3E50",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    zIndex: 1000,
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.2)"
+                }}
+            >
+                Show Popular Venues
+            </button>
+        );
+    }
 
     return (
         <div style={{
             position: "absolute",
             right: "20px",
-            top: "250px",
-            width: "300px",
+            top: "20px", 
             backgroundColor: "rgba(255, 255, 255, 0.95)",
             padding: "20px",
             borderRadius: "15px",
             boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
-            zIndex: 1000,
-            maxHeight: "400px",
-            overflowY: "auto"
+            maxWidth: "300px",
+            maxHeight: "calc(100vh - 500px)", 
+            overflowY: "auto", 
+            zIndex: 1000
         }}>
-            <h3 style={{ margin: "0 0 15px 0" }}>Popular Venues Nearby</h3>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
+                <h3 style={{ margin: 0 }}>Popular Venues Nearby</h3>
+                <button
+                    onClick={() => setIsVisible(false)}
+                    style={{
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        padding: "5px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
+                    }}
+                >
+                    <FaTimes style={{ color: "#666" }} />
+                </button>
+            </div>
             {data.map((venue, index) => (
                 <div key={index} style={{
                     marginBottom: "15px",
@@ -458,7 +469,8 @@ const MapComponent = () => {
                 searchVenues={searchVenues}
             />
 
-            <TimePatternPanel data={timePatternData} />
+            <TimePatternPanel />
+            <CategoryTrendsPanel />
             <PopularVenuesPanel data={popularVenues} />
         </div>
     );
