@@ -2,7 +2,7 @@
 
 An interactive web application that helps users explore popular venues in New York City using React and Leaflet.js for the frontend, with Node.js and PostGIS-enabled PostgreSQL for spatial and temporal analysis of Foursquare check-in data.
 
-<img width="800" alt="UI Screenshot" src="https://github.com/user-attachments/assets/998ba2c4-f69d-4f69-9de9-13847bca1d63" />
+<img width="800" alt="UI Screenshot" src="./pic1.png" />
 
 ## ✨ Features
 
