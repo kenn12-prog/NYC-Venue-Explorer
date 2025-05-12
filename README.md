@@ -1,6 +1,6 @@
 # NYC Venue Explorer
 
-![NYC Venue Explorer](https://via.placeholder.com/800x400?text=NYC+Venue+Explorer)
+![NYC Venue Explorer](client/public/pic1.png)
 
 ## Project Overview
 
@@ -26,9 +26,9 @@ NYC Venue Explorer is a multi-dimensional query analysis system based on locatio
 
 ## System Screenshots
 
-![Search Function](https://via.placeholder.com/400x300?text=Search+Function)
-![Heat Map](https://via.placeholder.com/400x300?text=Heat+Map)
-![Trajectory Matching](https://via.placeholder.com/400x300?text=Trajectory+Matching)
+![Search Function](client/public/pic2.png)
+![Heat Map](client/public/pic3.png)
+![Trajectory Matching](client/public/pic4.png)
 
 ## Installation and Running
 
