@@ -1,12 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import React, { useState, useEffect, useRef } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from "react-leaflet";
 import axios from "axios";
 import L from "leaflet";
 import 'leaflet/dist/leaflet.css';
-import { ImageOverlay } from "react-leaflet";
-import TimePatternPanel from './components/TimePatternPanel';
-import CategoryTrendsPanel from './components/CategoryTrendsPanel';
-import { FaTimes } from 'react-icons/fa';
+import { Box, Typography, Paper } from '@mui/material';
 
 // Fix Leaflet default icon issue
 delete L.Icon.Default.prototype._getIconUrl;
@@ -53,7 +50,7 @@ const MapUpdater = ({ center }) => {
   return null;
 };
 
-const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, radius, setRadius, category, setCategory, categories, searchVenues }) => {
+const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, radius, setRadius, category, setCategory, categories, searchVenues, startTime, setStartTime, endTime, setEndTime }) => {
     return (
         <div style={{
             position: "absolute",
@@ -122,7 +119,7 @@ const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, radius, s
                         backgroundColor: "#f8f9fa",
                         transition: "all 0.3s ease",
                         outline: "none"
-                    }}
+          }}
                     onFocus={(e) => e.target.style.borderColor = "#4A90E2"}
                     onBlur={(e) => e.target.style.borderColor = "#e0e0e0"}
                 />
@@ -149,7 +146,7 @@ const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, radius, s
                         backgroundColor: "#f8f9fa",
                         transition: "all 0.3s ease",
                         outline: "none"
-                    }}
+          }}
                     onFocus={(e) => e.target.style.borderColor = "#4A90E2"}
                     onBlur={(e) => e.target.style.borderColor = "#e0e0e0"}
                 />
@@ -176,7 +173,7 @@ const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, radius, s
                         backgroundColor: "#f8f9fa",
                         transition: "all 0.3s ease",
                         outline: "none"
-                    }}
+          }}
                     onFocus={(e) => e.target.style.borderColor = "#4A90E2"}
                     onBlur={(e) => e.target.style.borderColor = "#e0e0e0"}
                 />
@@ -215,6 +212,70 @@ const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, radius, s
                 </select>
             </div>
 
+            <div className="input-group">
+                <label style={{
+                    display: "block",
+                    marginBottom: "8px",
+                    color: "#4a4a4a",
+                    fontSize: "14px",
+                    fontWeight: "500"
+                }}>Time Range:</label>
+                <div style={{ 
+                    display: "flex", 
+                    gap: "12px",
+                    alignItems: "center",
+                    justifyContent: "flex-start"
+                }}>
+                    <div style={{ width: "120px" }}>
+                        <input 
+                            type="text" 
+                            value={startTime} 
+                            onChange={(e) => setStartTime(e.target.value)}
+                            placeholder="00:00"
+                            style={{
+                                padding: "8px 10px",
+                                border: "2px solid #e0e0e0",
+                                borderRadius: "8px",
+                                fontSize: "13px",
+                                width: "100%",
+                                backgroundColor: "#f8f9fa",
+                                transition: "all 0.3s ease",
+                                outline: "none"
+                            }}
+                            onFocus={(e) => e.target.style.borderColor = "#4A90E2"}
+                            onBlur={(e) => e.target.style.borderColor = "#e0e0e0"}
+                        />
+                    </div>
+                    <span style={{ 
+                        color: "#666",
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        flex: "0 0 auto",
+                        marginLeft: "20px"
+                    }}>to</span>
+                    <div style={{ width: "120px" }}>
+                        <input 
+                            type="text" 
+                            value={endTime} 
+                            onChange={(e) => setEndTime(e.target.value)}
+                            placeholder="23:59"
+                            style={{
+                                padding: "8px 10px",
+                                border: "2px solid #e0e0e0",
+                                borderRadius: "8px",
+                                fontSize: "13px",
+                                width: "100%",
+                                backgroundColor: "#f8f9fa",
+                                transition: "all 0.3s ease",
+                                outline: "none"
+                            }}
+                            onFocus={(e) => e.target.style.borderColor = "#4A90E2"}
+                            onBlur={(e) => e.target.style.borderColor = "#e0e0e0"}
+                        />
+                    </div>
+                </div>
+            </div>
+
             <button 
                 onClick={searchVenues}
                 style={{
@@ -249,230 +310,156 @@ const SearchPanel = ({ latitude, setLatitude, longitude, setLongitude, radius, s
     );
 };
 
-// 新增：热门场所面板
-const PopularVenuesPanel = ({ data }) => {
-    const [isVisible, setIsVisible] = useState(true);
-    
-    if (!data || data.length === 0) return null;
-    if (!isVisible) {
-        return (
-            <button 
-                onClick={() => setIsVisible(true)}
-                style={{
-                    position: "absolute",
-                    right: "20px",
-                    top: "20px",
-                    padding: "10px 20px",
-                    backgroundColor: "#2C3E50",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    zIndex: 1000,
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.2)"
-                }}
-            >
-                Show Popular Venues
-            </button>
-        );
-    }
-
-    return (
-        <div style={{
-            position: "absolute",
-            right: "20px",
-            top: "20px", 
-            backgroundColor: "rgba(255, 255, 255, 0.95)",
-            padding: "20px",
-            borderRadius: "15px",
-            boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
-            maxWidth: "300px",
-            maxHeight: "calc(100vh - 500px)", 
-            overflowY: "auto", 
-            zIndex: 1000
-        }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
-                <h3 style={{ margin: 0 }}>Popular Venues Nearby</h3>
-                <button
-                    onClick={() => setIsVisible(false)}
-                    style={{
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        padding: "5px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center"
-                    }}
-                >
-                    <FaTimes style={{ color: "#666" }} />
-                </button>
-            </div>
-            {data.map((venue, index) => (
-                <div key={index} style={{
-                    marginBottom: "15px",
-                    padding: "10px",
-                    backgroundColor: "#f8f9fa",
-                    borderRadius: "8px"
-                }}>
-                    <div style={{ fontWeight: "500" }}>{venue.venue_category_name}</div>
-                    <div style={{ fontSize: "14px", color: "#666" }}>
-                        <div>Check-ins: {venue.checkin_count}</div>
-                        <div>Unique visitors: {venue.unique_visitors}</div>
-                        <div>Distance: {venue.distance}m</div>
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
-};
-
 const MapComponent = () => {
-    const [latitude, setLatitude] = useState(40.7128);
-    const [longitude, setLongitude] = useState(-74.0060);
-    const [radius, setRadius] = useState(5000);
-    const [category, setCategory] = useState("");
     const [venues, setVenues] = useState([]);
+    const [selectedVenue, setSelectedVenue] = useState(null);
+    const [venueDetails, setVenueDetails] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [mapCenter, setMapCenter] = useState([40.7128, -74.0060]);
+    const [mapZoom, setMapZoom] = useState(13);
     const [categories, setCategories] = useState([]);
-    
-    // 新增状态
-    const [timePatternData, setTimePatternData] = useState([]);
-    const [popularVenues, setPopularVenues] = useState([]);
-    const [selectedTimeSlot, setSelectedTimeSlot] = useState("all");
-    const [selectedDayType, setSelectedDayType] = useState("all");
+    const [selectedCategory, setSelectedCategory] = useState('');
+    const [latitude, setLatitude] = useState('40.7128');
+    const [longitude, setLongitude] = useState('-74.0060');
+    const [radius, setRadius] = useState('5000');
+    const [startTime, setStartTime] = useState('09:00');
+    const [endTime, setEndTime] = useState('17:00');
+    const mapRef = useRef(null);
 
     useEffect(() => {
-        // 获取所有可用的场所类别
-        const fetchCategories = async () => {
-            try {
-                const response = await axios.get('http://localhost:5001/categories');
-                setCategories(response.data);
-            } catch (error) {
-                console.error('Error fetching categories:', error);
-            }
-        };
         fetchCategories();
     }, []);
 
-    // 新增：获取时间模式数据
-    const fetchTimePatterns = async () => {
+    const fetchCategories = async () => {
         try {
-            const response = await axios.get('http://localhost:5001/time-patterns', {
-                params: {
-                    dayType: selectedDayType,
-                    timeSlot: selectedTimeSlot
-                }
-            });
-            setTimePatternData(response.data);
+            const response = await axios.get('http://localhost:3001/categories');
+            setCategories(response.data);
         } catch (error) {
-            console.error('Error fetching time patterns:', error);
+            console.error('Error fetching categories:', error);
         }
     };
 
-    // 新增：获取热门场所数据
-    const fetchPopularVenues = async () => {
-        try {
-            const response = await axios.get('http://localhost:5001/popular-venues', {
-                params: {
-                    latitude,
-                    longitude,
-                    radius
-                }
-            });
-            setPopularVenues(response.data);
-        } catch (error) {
-            console.error('Error fetching popular venues:', error);
-        }
-    };
-
-    // 修改searchVenues函数来同时获取所有数据
     const searchVenues = async () => {
         try {
-            const [venuesRes, popularRes, patternsRes] = await Promise.all([
-                axios.get('http://localhost:5001/search', {
-                    params: {
-                        latitude,
-                        longitude,
-                        radius,
-                        category: category || undefined
-                    }
-                }),
-                axios.get('http://localhost:5001/popular-venues', {
-                    params: {
-                        latitude,
-                        longitude,
-                        radius
-                    }
-                }),
-                axios.get('http://localhost:5001/time-patterns', {
-                    params: {
-                        dayType: selectedDayType,
-                        timeSlot: selectedTimeSlot
-                    }
-                })
-            ]);
-
-            setVenues(venuesRes.data.venues || []);
-            setPopularVenues(popularRes.data);
-            setTimePatternData(patternsRes.data);
+            const params = {
+                latitude,
+                longitude,
+                radius,
+                category: selectedCategory,
+                startTime,
+                endTime
+            };
+            const response = await axios.get('http://localhost:3001/search', { params });
+            setVenues(response.data.venues || []);
+            setMapCenter([parseFloat(latitude), parseFloat(longitude)]);
         } catch (error) {
-            console.error('Error searching data:', error);
+            console.error('Error searching venues:', error);
+        }
+    };
+
+    const handleVenueClick = async (venue) => {
+        setSelectedVenue(venue);
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await axios.get(`http://localhost:3001/venue/${venue.venue_id}`);
+            setVenueDetails(response.data);
+        } catch (error) {
+            console.error('Error fetching venue details:', error);
+            setError('Failed to load venue details');
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div style={{ height: "100vh", width: "100vw", position: "relative" }}>
+        <Box sx={{ height: '100vh', width: '100%', position: 'relative' }}>
             <MapContainer
-                center={[latitude, longitude]}
-                zoom={13}
-                style={{ height: "100vh", width: "100%" }}
+                center={mapCenter}
+                zoom={mapZoom}
+                style={{ height: '100%', width: '100%' }}
             >
                 <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 />
                 <FixMap />
-                <MapUpdater center={[latitude, longitude]} />
-                
-                {/* User's selected location */}
-                <Marker position={[latitude, longitude]} icon={homeIcon}>
-                    <Popup>Selected Location</Popup>
-                </Marker>
+                <MapUpdater center={mapCenter} />
 
-                {/* Nearby venues */}
-                {venues.map((venue, index) => (
+                {venues.map((venue) => (
                     <Marker
-                        key={index}
+                        key={venue.venue_id}
                         position={[venue.latitude, venue.longitude]}
-                        icon={venueIcon}
+                        eventHandlers={{
+                            click: () => handleVenueClick(venue),
+                        }}
                     >
                         <Popup>
-                            <div>
-                                <h3>{venue.venue_category_name}</h3>
-                                <p>Distance: {venue.distance}m</p>
-                            </div>
+                            <Typography variant="h6">{venue.venue_name}</Typography>
+                            <Typography variant="body2">Category: {venue.category_name}</Typography>
                         </Popup>
                     </Marker>
                 ))}
+
+                <SearchPanel
+                    latitude={latitude}
+                    setLatitude={setLatitude}
+                    longitude={longitude}
+                    setLongitude={setLongitude}
+                    radius={radius}
+                    setRadius={setRadius}
+                    category={selectedCategory}
+                    setCategory={setSelectedCategory}
+                    categories={categories}
+                    searchVenues={searchVenues}
+                    startTime={startTime}
+                    setStartTime={setStartTime}
+                    endTime={endTime}
+                    setEndTime={setEndTime}
+                />
             </MapContainer>
 
-            <SearchPanel
-                latitude={latitude}
-                setLatitude={setLatitude}
-                longitude={longitude}
-                setLongitude={setLongitude}
-                radius={radius}
-                setRadius={setRadius}
-                category={category}
-                setCategory={setCategory}
-                categories={categories}
-                searchVenues={searchVenues}
-            />
-
-            <TimePatternPanel />
-            <CategoryTrendsPanel />
-            <PopularVenuesPanel data={popularVenues} />
-        </div>
+            {selectedVenue && (
+                <Paper
+                    elevation={3}
+                    sx={{
+                        position: 'absolute',
+                        top: 20,
+                        right: 20,
+                        padding: 2,
+                        maxWidth: 400,
+                        maxHeight: '80vh',
+                        overflow: 'auto',
+                        zIndex: 1000,
+                    }}
+                >
+                    {loading ? (
+                        <Typography>Loading...</Typography>
+                    ) : error ? (
+                        <Typography color="error">{error}</Typography>
+                    ) : venueDetails ? (
+                        <Box>
+                            <Typography variant="h5" gutterBottom>
+                                {venueDetails.venue_name}
+                            </Typography>
+                            <Typography variant="body1" paragraph>
+                                Category: {venueDetails.category_name}
+                            </Typography>
+                            <Typography variant="body1" paragraph>
+                                Address: {venueDetails.address}
+                            </Typography>
+                            <Typography variant="body1" paragraph>
+                                Check-ins: {venueDetails.checkin_count}
+                            </Typography>
+                            <Typography variant="body1" paragraph>
+                                Users: {venueDetails.user_count}
+                            </Typography>
+                        </Box>
+                    ) : null}
+                </Paper>
+            )}
+        </Box>
     );
 };
 
