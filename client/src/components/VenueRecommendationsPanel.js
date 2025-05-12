@@ -3,19 +3,19 @@ import { Paper, Typography, List, ListItem, ListItemText, CircularProgress, Divi
 import L from 'leaflet';
 
 const VenueRecommendationsPanel = ({ venues, loading, error, mapRef, onClose }) => {
-  // 在地图上显示推荐的场所
+ 
   React.useEffect(() => {
     const markers = [];
     
     if (mapRef.current && venues && venues.length > 0) {
-      // 清除之前的标记
+
       mapRef.current.eachLayer(layer => {
         if (layer instanceof L.Marker && layer._recommendationMarker) {
           mapRef.current.removeLayer(layer);
         }
       });
       
-      // 添加新的标记
+
       venues.forEach((venue, index) => {
         const marker = L.marker([venue.latitude, venue.longitude], {
           icon: L.divIcon({
@@ -40,7 +40,7 @@ const VenueRecommendationsPanel = ({ venues, loading, error, mapRef, onClose }) 
         markers.push(marker);
       });
       
-      // 如果有标记，将地图视图聚焦在标记上
+     
       if (markers.length > 0) {
         const group = new L.featureGroup(markers);
         mapRef.current.fitBounds(group.getBounds(), { padding: [50, 50] });

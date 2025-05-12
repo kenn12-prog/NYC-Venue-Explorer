@@ -5,7 +5,6 @@ const { Pool } = require("pg");
 
 const app = express();
 
-// 配置 CORS
 app.use(cors({
     origin: 'http://localhost:3000',
     methods: ['GET', 'POST'],
@@ -14,13 +13,11 @@ app.use(cors({
 
 app.use(express.json());
 
-// 添加错误处理中间件
 app.use((err, req, res, next) => {
     console.error('Server error:', err);
     res.status(500).json({ error: 'Internal server error', details: err.message });
 });
 
-// 添加路由日志中间件
 app.use((req, res, next) => {
     console.log(`${req.method} ${req.path}`);
     next();
@@ -143,7 +140,6 @@ app.get("/search", async (req, res) => {
     const { rows } = await pool.query(query, queryParams);
     console.log("Query results:", rows);
     
-    // 格式化输出结果
     const formattedResults = {
       total_venues: rows.length,
       venues: rows.map(venue => ({
@@ -182,7 +178,7 @@ app.get("/categories", async (req, res) => {
   }
 });
 
-// Query 2: 热度+时间段的场所推荐
+// Query 2
 app.get("/recommendations", async (req, res) => {
   const { latitude, longitude, radius, startTime, endTime } = req.query;
   
@@ -244,7 +240,7 @@ app.get("/recommendations", async (req, res) => {
   }
 });
 
-// DTW算法实现
+// DTW
 function calculateDTWSimilarity(trajectory1, trajectory2) {
   const n = trajectory1.length;
   const m = trajectory2.length;
@@ -299,7 +295,7 @@ function calculatePointDistance(point1, point2) {
   return spatialDistance + timeDistance;
 }
 
-// query3:修改相似轨迹查询端点
+// query3
 app.post("/similar-trajectories", async (req, res) => {
   console.log('Received request at /similar-trajectories');
   const { trajectory } = req.body;
@@ -361,11 +357,10 @@ app.post("/similar-trajectories", async (req, res) => {
       };
     });
 
-    // 按相似度降序排序
+    
     similarUsers.sort((a, b) => b.similarity - a.similarity);
     console.log('Similar users found:', similarUsers.length);
 
-    // 返回前10个最相似的用户
     const topSimilarUsers = similarUsers.slice(0, 10);
     console.log('Top similar users:', topSimilarUsers.length);
     
@@ -376,7 +371,6 @@ app.post("/similar-trajectories", async (req, res) => {
   }
 });
 
-// 基于相似用户推荐场所端点
 app.post("/recommend-venues-from-similar-users", async (req, res) => {
   console.log('Received request at /recommend-venues-from-similar-users');
   const { userIds } = req.body;
@@ -387,7 +381,7 @@ app.post("/recommend-venues-from-similar-users", async (req, res) => {
   }
 
   try {
-    // 获取这些用户访问过的共同场所
+  
     const commonVenuesQuery = `
       WITH similar_users_venues AS (
         SELECT 
