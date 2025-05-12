@@ -43,8 +43,8 @@ NYC Venue Explorer is a multi-dimensional query analysis system based on locatio
 1. Create PostgreSQL database and enable PostGIS extension:
 
 ```sql
-CREATE DATABASE nyc_venues_db;
-\c nyc_venues_db
+CREATE DATABASE foursquare_db;
+\c foursquare_db
 CREATE EXTENSION postgis;
 ```
 
@@ -54,18 +54,37 @@ CREATE EXTENSION postgis;
 CREATE TABLE foursquare_checkins (
     user_id TEXT,
     venue_id TEXT,
-    latitude FLOAT,
-    longitude FLOAT,
+    venue_category_id TEXT,
     venue_category_name TEXT,
-    utc_time TIMESTAMP,
-    timezone_offset INTEGER,
-    geom GEOMETRY(Point, 4326)
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION,
+    timezone_offset INTEGER, 
+    utc_time TIMESTAMP
 );
-
-CREATE INDEX idx_geom ON foursquare_checkins USING GIST(geom);
 ```
 
-3. Import data (assuming Foursquare data is available)
+3. Import data from CSV file:
+
+```sql
+COPY foursquare_checkins(
+    user_id, venue_id, venue_category_id, venue_category_name,
+    latitude, longitude, timezone_offset, utc_time
+)
+FROM '/path/to/dataset_TSMC2014_NYC.csv'
+WITH (
+    FORMAT csv,
+    HEADER true
+);
+```
+
+4. Add spatial geometry and create index:
+
+```sql
+UPDATE foursquare_checkins
+SET geom = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326);
+
+CREATE INDEX idx_geom ON foursquare_checkins USING GIST (geom);
+```
 
 ### Environment Configuration
 
@@ -73,9 +92,9 @@ Create a `.env` file in the project root directory:
 
 ```
 DB_HOST=localhost
-DB_USER=postgres
+DB_USER=your_username
 DB_PASSWORD=your_password
-DB_NAME=nyc_venues_db
+DB_NAME=foursquare_db
 DB_PORT=5432
 PORT=3001
 ```
@@ -112,13 +131,15 @@ The application will automatically open in your browser at: http://localhost:300
 2. Set a search radius (e.g., 500 meters)
 3. Choose a venue category (optional)
 4. Set a time period (e.g., 9 AM to 2 PM)
-5. Click the "Search" button to view results
+5. set a k nearnest neighbour data.
+6. Click the "Search" button to view results
 
 ### Popularity Recommendations
 
 1. Select an area and time period
 2. View the ranking of popular venue categories
-3. Observe the heat map distribution on the map
+3. click the popular venue to view heat map
+4. Observe the heat map distribution on the map
 
 ### Trajectory Matching and Recommendations
 
@@ -167,8 +188,8 @@ NYC Venue Explorer demonstrates how to use multi-dimensional data queries to imp
 1. **Spatial Dimension**: Nearest neighbor queries based on latitude, longitude, and distance
 2. **Temporal Dimension**: Filtering venue activity by time of day
 3. **Categorical Dimension**: Classification and filtering by venue type
-4. **Behavioral Dimension**: Analysis of check-in frequency and trajectory patterns
-5. **Multi-user Dimension**: Identifying similar users and combining their historical behavior data
+4. **Trajectory Dimension**: Analysis of check-in frequency and trajectory patterns
+
 
 ## Contribution and Development
 
