@@ -6,6 +6,8 @@
 
 NYC Venue Explorer is a multi-dimensional query analysis system based on location data. It utilizes Foursquare check-in data to help users discover popular venues in New York City, understand venue popularity patterns across time and space, and provides personalized recommendations based on trajectory similarity.
 
+DATASET LINK: https://www.kaggle.com/datasets/chetanism/foursquare-nyc-and-tokyo-checkin-dataset
+
 ### Main Features
 
 - **Venue Search**: Find nearby venues based on distance, category, and time periods
